@@ -1,0 +1,57 @@
+# PROJECT CONTEXT: NIKU (Nihongoku) - Native Android App
+
+## 1. Project Overview
+Aplikasi bernama "NIKU" (Nihongoku). Ini adalah platform EdTech (Aplikasi Belajar Bahasa Jepang) yang dinamis. Aplikasi ini menggunakan sistem Role-Based Access Control (RBAC) untuk dua jenis pengguna: Gakusei (Mahasiswa) dan Sensei (Dosen).
+
+## 2. Tech Stack & Architecture (Target)
+- Platform: Native Android
+- UI Toolkit: Jetpack Compose (Sangat disarankan karena transisi logikanya mirip dengan prototype React sebelumnya).
+- Arsitektur: MVVM (Model-View-ViewModel).
+- AI Integration: Gemini API (untuk merangkum materi dan meng-generate kuis berformat JSON).
+
+## 3. Design System & Color Palette
+Aplikasi menggunakan gaya visual yang bersih, modern, menggunakan sudut membulat (rounded corners 16dp - 32dp), dan card berbasis bayangan lembut (soft shadows).
+
+Color Palette (Hex):
+- Primary (Crimson): #C0272D (Digunakan untuk: Tombol utama, aksen, ikon partikel)
+- Secondary (Sakura): #F2A8B0 (Digunakan untuk: Tag "Baru", highlight, background status ringan)
+- Background (Cream): #F5EDE6 (Digunakan untuk: Latar belakang utama aplikasi, input field)
+- Text/Header (Navy): #1C2340 (Digunakan untuk: Header, teks utama, warna dominan profil)
+- Accent (Tan): #C9A882 (Digunakan untuk: XP badge, level, aksen sekunder)
+- Typography: Serif (seperti Georgia) untuk judul besar/elegan, dan Sans-serif (seperti Roboto/System) untuk body text.
+
+## 4. User Roles & Logic
+1. Gakusei (Mahasiswa): Konsumen materi. Bisa membaca rangkuman, mengerjakan kuis, dan melihat progress.
+2. Sensei (Dosen): Pembuat materi. Memiliki dashboard khusus untuk mengunggah teks materi mentah.
+
+## 5. Core Screens & Features (Gakusei App)
+- Screen 1: Login
+  - UI: Logo NIKU, Input Email & Password (dengan fitur show/hide toggle), Text Button "Lupa Password", Button Login Utama, Button "Masuk dengan Google", Text link "Daftar".
+
+- Screen 2: Beranda (Home)
+  - UI: Header sapaan ("Halo, [Nama]!"), Top bar berisi notifikasi lonceng.
+  - Cards: Indikator "Streak Hari" dan "Total XP".
+  - Section 1: "Materi Hari Ini" (menampilkan CTA materi yang sedang dipelajari).
+  - Section 2: Grid 2x2 "Kategori Materi" (は Partikel, 動 Konjugasi, 語 Kosakata, 漢 Kanji).
+  - Section 3: List Notifikasi dari dosen.
+
+- Screen 3: Materi (Lessons)
+  - UI: Search bar, Scrollable Filter Chips (Semua, Partikel, Konjugasi, dll).
+  - List: Menampilkan list materi. Setiap item list memiliki indikator tipe, estimasi waktu baca, dan linear progress bar persentase penyelesaian.
+
+- Screen 4: Kuis (Interactive Quiz)
+  - UI: Header dengan indikator soal (Soal 3 dari 10) dan progress bar. Menampilkan +XP.
+  - Konten Soal: Teks bahasa jepang, romaji, dan terjemahan.
+  - Opsi: 4 tombol pilihan ganda (A, B, C, D).
+  - Interaksi: Saat user memilih, tombol berubah warna (Hijau jika benar, Merah jika salah). Muncul box "Penjelasan" di bawah opsi jawaban sebelum lanjut ke soal berikutnya.
+
+- Screen 5: Progress (Profile & Stats)
+  - UI: Header profil (Avatar, Nama, Email, Level Badge).
+  - Statistik: Total Streak, XP, dan Materi Selesai.
+  - Section 1: Progress bar untuk masing-masing kategori bahasa (Partikel, Kanji, dll).
+  - Section 2: Kalender Streak mingguan (Senin-Minggu) dengan indikator api (🔥) untuk hari aktif.
+  - Section 3: Grid Pencapaian (Badges) yang bisa 'unlocked' atau 'locked' (opacity 50%).
+
+## 6. Advanced Features (Backend/AI Logic for ViewModel)
+- Gemini Content Pipeline: Saat Sensei upload materi, trigger Gemini API. Gemini merangkum materi menjadi bullet points (untuk Screen Materi) dan membuahkan output JSON kuis (untuk Screen Kuis).
+- Adaptive Learning: Kuis memiliki "Passing Grade" (misal 80 XP). Materi selanjutnya (dengan field `locked: true` di database) hanya akan berubah menjadi `locked: false` (terbuka) jika kuis materi sebelumnya berhasil lulus.
