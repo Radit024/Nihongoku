@@ -1,12 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
-import { router, useLocalSearchParams } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -14,270 +11,184 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppContext } from "@/context/AppContext";
-import { Lesson } from "@/data/seed";
 import { useColors } from "@/hooks/useColors";
+import { useLocalSearchParams, router } from "expo-router";
+import { ApiMaterial } from "@/lib/api";
 
-const FILTERS = [
-  { id: "all", label: "Semua" },
-  { id: "partikel", label: "Partikel は" },
-  { id: "konjugasi", label: "Konjugasi 動" },
-  { id: "kosakata", label: "Kosakata 語" },
-  { id: "kanji", label: "Kanji 漢" },
-];
-
-const CATEGORY_COLORS: Record<string, string> = {
-  partikel: "#C0272D",
-  konjugasi: "#2563EB",
-  kosakata: "#16A34A",
-  kanji: "#7C3AED",
-};
+const ALL_CATEGORIES = ["Semua", "Tata Bahasa", "Kosakata", "Kanji", "Percakapan", "Budaya"];
 
 export default function MateriScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { lessons, lessonProgress } = useAppContext();
-  const params = useLocalSearchParams<{ category?: string }>();
+  const { materials, refreshMaterials, quizHistory, refreshQuizHistory } = useAppContext();
+  const params = useLocalSearchParams<{ filter?: string }>();
 
   const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState(params.category ?? "all");
+  const [selectedCategory, setSelectedCategory] = useState(params.filter || "Semua");
 
-  const filtered = useMemo(() => {
-    return lessons.filter((l) => {
-      const matchFilter = activeFilter === "all" || l.category === activeFilter;
-      const matchSearch = l.title.toLowerCase().includes(search.toLowerCase());
-      return matchFilter && matchSearch;
-    });
-  }, [lessons, activeFilter, search]);
+  useEffect(() => {
+    refreshMaterials();
+    refreshQuizHistory();
+  }, []);
+
+  useEffect(() => {
+    if (params.filter) setSelectedCategory(params.filter);
+  }, [params.filter]);
+
+  const passedMaterials = new Set(quizHistory.filter(q => q.passed).map(q => q.materialId));
+
+  const filtered = materials.filter((m) => {
+    const matchCategory = selectedCategory === "Semua" || m.category === selectedCategory;
+    const matchSearch = !search || m.title.toLowerCase().includes(search.toLowerCase());
+    return matchCategory && matchSearch;
+  });
 
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
+    container: { flex: 1, backgroundColor: colors.background },
     header: {
       paddingTop: topPad + 16,
       paddingHorizontal: 20,
-      paddingBottom: 12,
+      paddingBottom: 16,
+      backgroundColor: colors.primary,
     },
     headerTitle: {
-      fontSize: 26,
+      fontSize: 24,
       fontWeight: "800" as const,
-      color: colors.foreground,
+      color: colors.primaryForeground,
       fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-      marginBottom: 14,
     },
-    searchRow: {
+    searchWrapper: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: colors.card,
-      borderRadius: colors.radius,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      paddingHorizontal: 12,
+      backgroundColor: "rgba(255,255,255,0.15)",
+      borderRadius: 12,
+      paddingHorizontal: 14,
       height: 44,
-      gap: 8,
+      marginTop: 12,
     },
     searchInput: {
       flex: 1,
       fontSize: 14,
-      color: colors.foreground,
+      color: colors.primaryForeground,
+      marginLeft: 8,
     },
-    filterScroll: {
+    chipRow: {
       paddingHorizontal: 20,
       paddingVertical: 12,
+      flexDirection: "row",
+      gap: 8,
     },
-    filterChip: {
+    chip: {
       paddingHorizontal: 14,
-      paddingVertical: 7,
+      paddingVertical: 6,
       borderRadius: 20,
-      marginRight: 8,
-      borderWidth: 1.5,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.card,
     },
-    filterChipActive: {
+    chipActive: {
       backgroundColor: colors.primary,
       borderColor: colors.primary,
     },
-    filterChipInactive: {
-      backgroundColor: colors.card,
-      borderColor: colors.border,
-    },
-    filterChipText: {
+    chipText: {
       fontSize: 13,
-      fontWeight: "600" as const,
+      color: colors.foreground,
+      fontWeight: "500" as const,
     },
-    listContent: {
-      paddingHorizontal: 20,
-      gap: 12,
-      paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 90),
+    chipTextActive: {
+      color: colors.primaryForeground,
     },
-    lessonCard: {
+    list: { paddingHorizontal: 20, paddingBottom: 100 },
+    card: {
       backgroundColor: colors.card,
-      borderRadius: colors.radius,
+      borderRadius: 16,
       padding: 16,
+      marginBottom: 12,
       borderWidth: 1,
       borderColor: colors.border,
     },
-    lessonCardLocked: {
-      opacity: 0.55,
-    },
-    lessonTop: {
+    cardRow: {
       flexDirection: "row",
-      alignItems: "flex-start",
-      gap: 12,
-    },
-    lessonIconBox: {
-      width: 44,
-      height: 44,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    lessonIconText: {
-      fontSize: 20,
-      fontWeight: "800" as const,
-      fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-    },
-    lessonInfo: {
-      flex: 1,
-    },
-    lessonTitle: {
-      fontSize: 14,
-      fontWeight: "700" as const,
-      color: colors.foreground,
-      marginBottom: 4,
-    },
-    lessonMetaRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 8,
-    },
-    lessonCategoryBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 8,
-    },
-    lessonCategoryText: {
-      fontSize: 11,
-      fontWeight: "700" as const,
-    },
-    lessonTime: {
-      fontSize: 12,
-      color: colors.mutedForeground,
-    },
-    lockIcon: {
-      marginTop: 2,
-    },
-    progressContainer: {
-      marginTop: 12,
-    },
-    progressBar: {
-      height: 5,
-      borderRadius: 3,
-      backgroundColor: colors.muted,
-      overflow: "hidden",
-    },
-    progressFill: {
-      height: "100%",
-      borderRadius: 3,
-    },
-    progressRow: {
-      flexDirection: "row",
-      alignItems: "center",
       justifyContent: "space-between",
-      marginTop: 5,
+      alignItems: "flex-start",
     },
-    progressText: {
-      fontSize: 11,
-      color: colors.mutedForeground,
-    },
-    startBtn: {
-      paddingHorizontal: 14,
-      paddingVertical: 6,
-      borderRadius: 12,
-    },
-    startBtnText: {
-      fontSize: 12,
-      fontWeight: "700" as const,
-    },
-    emptyContainer: {
+    cardTitle: {
+      fontSize: 16,
+      fontWeight: "600" as const,
+      color: colors.foreground,
       flex: 1,
+      marginRight: 8,
+    },
+    statusBadge: {
+      borderRadius: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    statusText: {
+      fontSize: 11,
+      fontWeight: "600" as const,
+    },
+    cardDesc: {
+      fontSize: 13,
+      color: colors.mutedForeground,
+      marginTop: 6,
+    },
+    cardMeta: {
+      flexDirection: "row",
       alignItems: "center",
-      justifyContent: "center",
-      paddingTop: 80,
       gap: 12,
+      marginTop: 10,
+    },
+    metaBadge: {
+      backgroundColor: colors.secondary,
+      borderRadius: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    metaBadgeText: {
+      fontSize: 11,
+      color: colors.primary,
+      fontWeight: "500" as const,
+    },
+    metaText: {
+      fontSize: 12,
+      color: colors.mutedForeground,
     },
     emptyText: {
-      fontSize: 16,
-      color: colors.mutedForeground,
       textAlign: "center",
+      color: colors.mutedForeground,
+      fontSize: 14,
+      marginTop: 40,
     },
   });
 
-  const renderLesson = ({ item: lesson }: { item: Lesson }) => {
-    const prog = lessonProgress[lesson.id];
-    const progress = prog ? Math.min(prog.quizScore, 100) : 0;
-    const catColor = CATEGORY_COLORS[lesson.category] ?? colors.primary;
-    const catBg = catColor + "20";
+  const renderMaterial = ({ item }: { item: ApiMaterial }) => {
+    const isPassed = passedMaterials.has(item.id);
 
     return (
       <Pressable
-        style={[styles.lessonCard, lesson.locked && styles.lessonCardLocked]}
-        onPress={() => {
-          if (lesson.locked) return;
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          router.push(`/quiz/${lesson.id}`);
-        }}
+        style={styles.card}
+        onPress={() => router.push(`/quiz/${item.id}`)}
       >
-        <View style={styles.lessonTop}>
-          <View style={[styles.lessonIconBox, { backgroundColor: catBg }]}>
-            <Text style={[styles.lessonIconText, { color: catColor }]}>{lesson.titleJp}</Text>
-          </View>
-          <View style={styles.lessonInfo}>
-            <Text style={styles.lessonTitle}>{lesson.title}</Text>
-            <View style={styles.lessonMetaRow}>
-              <View style={[styles.lessonCategoryBadge, { backgroundColor: catBg }]}>
-                <Text style={[styles.lessonCategoryText, { color: catColor }]}>{lesson.categoryLabel}</Text>
-              </View>
-              <Ionicons name="time-outline" size={12} color={colors.mutedForeground} />
-              <Text style={styles.lessonTime}>{lesson.estimatedMinutes} menit</Text>
+        <View style={styles.cardRow}>
+          <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
+          {isPassed && (
+            <View style={[styles.statusBadge, { backgroundColor: "#2D6A4F20" }]}>
+              <Text style={[styles.statusText, { color: "#2D6A4F" }]}>Lulus</Text>
             </View>
-          </View>
-          {lesson.locked ? (
-            <Ionicons name="lock-closed" size={18} color={colors.mutedForeground} style={styles.lockIcon} />
-          ) : (
-            prog?.quizPassed && <Ionicons name="checkmark-circle" size={20} color={colors.correct} />
           )}
         </View>
-
-        {!lesson.locked && (
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: `${progress}%`, backgroundColor: catColor }]} />
-            </View>
-            <View style={styles.progressRow}>
-              <Text style={styles.progressText}>{progress > 0 ? `${progress}% selesai` : "Belum dimulai"}</Text>
-              <Pressable
-                style={[styles.startBtn, { backgroundColor: catColor + "15" }]}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push(`/quiz/${lesson.id}`);
-                }}
-              >
-                <Text style={[styles.startBtnText, { color: catColor }]}>
-                  {prog?.quizAttempts ? "Ulangi Kuis" : "Mulai Kuis"}
-                </Text>
-              </Pressable>
-            </View>
+        {item.description ? (
+          <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
+        ) : null}
+        <View style={styles.cardMeta}>
+          <View style={styles.metaBadge}>
+            <Text style={styles.metaBadgeText}>{item.category}</Text>
           </View>
-        )}
-
-        {lesson.locked && lesson.unlockedBy && (
-          <Text style={[styles.progressText, { marginTop: 8 }]}>
-            Selesaikan kuis sebelumnya untuk membuka
-          </Text>
-        )}
+          <Text style={styles.metaText}>{item.questionCount} soal</Text>
+        </View>
       </Pressable>
     );
   };
@@ -286,54 +197,47 @@ export default function MateriScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Materi</Text>
-        <View style={styles.searchRow}>
-          <Ionicons name="search-outline" size={18} color={colors.mutedForeground} />
+        <View style={styles.searchWrapper}>
+          <Ionicons name="search" size={18} color={colors.primaryForeground} />
           <TextInput
             style={styles.searchInput}
             placeholder="Cari materi..."
-            placeholderTextColor={colors.mutedForeground}
+            placeholderTextColor="rgba(255,255,255,0.5)"
             value={search}
             onChangeText={setSearch}
-            autoCorrect={false}
           />
-          {search.length > 0 && (
-            <Pressable onPress={() => setSearch("")}>
-              <Ionicons name="close-circle" size={18} color={colors.mutedForeground} />
-            </Pressable>
-          )}
         </View>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-        {FILTERS.map((f) => (
-          <Pressable
-            key={f.id}
-            style={[styles.filterChip, activeFilter === f.id ? styles.filterChipActive : styles.filterChipInactive]}
-            onPress={() => {
-              Haptics.selectionAsync();
-              setActiveFilter(f.id);
-            }}
-          >
-            <Text style={[styles.filterChipText, { color: activeFilter === f.id ? "#FFFFFF" : colors.foreground }]}>
-              {f.label}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-
       <FlatList
         data={filtered}
-        renderItem={renderLesson}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="book-outline" size={48} color={colors.mutedForeground} />
-            <Text style={styles.emptyText}>Tidak ada materi ditemukan</Text>
-          </View>
+        renderItem={renderMaterial}
+        contentContainerStyle={styles.list}
+        ListHeaderComponent={
+          <FlatList
+            data={ALL_CATEGORIES}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item) => item}
+            contentContainerStyle={styles.chipRow}
+            renderItem={({ item }) => (
+              <Pressable
+                style={[styles.chip, selectedCategory === item && styles.chipActive]}
+                onPress={() => setSelectedCategory(item)}
+              >
+                <Text style={[styles.chipText, selectedCategory === item && styles.chipTextActive]}>{item}</Text>
+              </Pressable>
+            )}
+          />
         }
-        scrollEnabled={filtered.length > 0}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>
+            {materials.length === 0
+              ? "Belum ada materi tersedia"
+              : "Tidak ditemukan materi yang sesuai"}
+          </Text>
+        }
       />
     </View>
   );

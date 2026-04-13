@@ -4,24 +4,15 @@ import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
+import { useAppContext } from "@/context/AppContext";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
-const TAB_CONFIG: {
-  name: string;
-  title: string;
-  icon: IoniconName;
-  iconFocused: IoniconName;
-}[] = [
-  { name: "index", title: "Beranda", icon: "home-outline", iconFocused: "home" },
-  { name: "materi", title: "Materi", icon: "book-outline", iconFocused: "book" },
-  { name: "kuis", title: "Kuis", icon: "help-circle-outline", iconFocused: "help-circle" },
-  { name: "progress", title: "Progress", icon: "bar-chart-outline", iconFocused: "bar-chart" },
-];
-
 export default function TabLayout() {
   const colors = useColors();
+  const { user } = useAppContext();
   const isAndroid = Platform.OS === "android";
+  const isDosen = user?.role === "dosen";
 
   return (
     <Tabs
@@ -47,22 +38,52 @@ export default function TabLayout() {
         ),
       }}
     >
-      {TAB_CONFIG.map((tab) => (
-        <Tabs.Screen
-          key={tab.name}
-          name={tab.name}
-          options={{
-            title: tab.title,
-            tabBarIcon: ({ color, focused }) => (
-              <Ionicons
-                name={focused ? tab.iconFocused : tab.icon}
-                size={22}
-                color={color}
-              />
-            ),
-          }}
-        />
-      ))}
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Beranda",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "home" : "home-outline"} size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="materi"
+        options={{
+          title: "Materi",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "book" : "book-outline"} size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="upload"
+        options={{
+          title: "Upload",
+          href: isDosen ? undefined : null,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "cloud-upload" : "cloud-upload-outline"} size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="kuis"
+        options={{
+          title: "Kuis",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "help-circle" : "help-circle-outline"} size={22} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="progress"
+        options={{
+          title: "Progress",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "bar-chart" : "bar-chart-outline"} size={22} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

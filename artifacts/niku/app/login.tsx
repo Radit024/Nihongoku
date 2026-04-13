@@ -20,15 +20,26 @@ import { useColors } from "@/hooks/useColors";
 export default function LoginScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { login } = useAppContext();
+  const { login, register } = useAppContext();
 
+  const [isRegister, setIsRegister] = useState(false);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<"mahasiswa" | "dosen">("mahasiswa");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = async () => {
+  const [nameFocused, setNameFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+
+  const handleSubmit = async () => {
+    if (isRegister && !name.trim()) {
+      setError("Harap isi nama lengkap.");
+      return;
+    }
     if (!email.trim() || !password.trim()) {
       setError("Harap isi email dan password.");
       return;
@@ -37,18 +48,18 @@ export default function LoginScreen() {
     setIsLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    await new Promise((r) => setTimeout(r, 800));
-
-    const name = email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-    login(name || "Gakusei", email);
-    setIsLoading(false);
-    router.replace("/(tabs)");
-  };
-
-  const handleGoogleLogin = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    login("Gakusei Demo", "demo@nihongoku.jp");
-    router.replace("/(tabs)");
+    try {
+      if (isRegister) {
+        await register(name, email, password, role);
+      } else {
+        await login(email, password);
+      }
+      router.replace("/(tabs)");
+    } catch (err: any) {
+      setError(err.message || "Terjadi kesalahan");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const styles = StyleSheet.create({
@@ -137,21 +148,40 @@ export default function LoginScreen() {
       fontSize: 15,
       color: colors.foreground,
     },
-    forgotBtn: {
-      alignSelf: "flex-end",
-      paddingVertical: 4,
+    roleRow: {
+      flexDirection: "row",
+      gap: 12,
     },
-    forgotText: {
-      fontSize: 13,
+    roleBtn: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      height: 48,
+      borderRadius: colors.radius,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      backgroundColor: colors.card,
+    },
+    roleBtnActive: {
+      borderColor: colors.primary,
+      backgroundColor: colors.secondary,
+    },
+    roleBtnText: {
+      fontSize: 14,
+      fontWeight: "600" as const,
+      color: colors.mutedForeground,
+    },
+    roleBtnTextActive: {
       color: colors.primary,
-      fontWeight: "500" as const,
     },
     errorText: {
       color: colors.destructive,
       fontSize: 13,
       textAlign: "center",
     },
-    loginBtn: {
+    submitBtn: {
       backgroundColor: colors.primary,
       borderRadius: colors.radius,
       height: 52,
@@ -164,66 +194,32 @@ export default function LoginScreen() {
       shadowRadius: 12,
       elevation: 8,
     },
-    loginBtnDisabled: {
+    submitBtnDisabled: {
       opacity: 0.7,
     },
-    loginBtnText: {
+    submitBtnText: {
       color: colors.primaryForeground,
       fontSize: 16,
       fontWeight: "700" as const,
       letterSpacing: 0.5,
     },
-    dividerRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginVertical: 18,
-      gap: 12,
-    },
-    dividerLine: {
-      flex: 1,
-      height: 1,
-      backgroundColor: colors.border,
-    },
-    dividerText: {
-      color: colors.mutedForeground,
-      fontSize: 13,
-    },
-    googleBtn: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 10,
-      borderRadius: colors.radius,
-      height: 52,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
-    },
-    googleBtnText: {
-      color: colors.foreground,
-      fontSize: 15,
-      fontWeight: "600" as const,
-    },
-    registerRow: {
+    switchRow: {
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
       marginTop: 24,
       gap: 4,
     },
-    registerText: {
+    switchText: {
       color: colors.mutedForeground,
       fontSize: 14,
     },
-    registerLink: {
+    switchLink: {
       color: colors.primary,
       fontSize: 14,
       fontWeight: "700" as const,
     },
   });
-
-  const [emailFocused, setEmailFocused] = useState(false);
-  const [passwordFocused, setPasswordFocused] = useState(false);
 
   return (
     <View style={styles.container}>
@@ -231,7 +227,7 @@ export default function LoginScreen() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.topDecoration}>
             <View style={styles.logoCircle}>
-              <Text style={styles.logoText}>に</Text>
+              <Text style={styles.logoText}>{"\u306B"}</Text>
             </View>
             <Text style={styles.appName}>NIKU</Text>
             <Text style={styles.appSubtitle}>NIHONGOKU</Text>
@@ -239,6 +235,41 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.formSection}>
+            {isRegister && (
+              <>
+                <View style={[styles.inputWrapper, nameFocused && styles.inputWrapperFocused]}>
+                  <Ionicons name="person-outline" size={18} color={nameFocused ? colors.primary : colors.mutedForeground} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Nama Lengkap"
+                    placeholderTextColor={colors.mutedForeground}
+                    value={name}
+                    onChangeText={setName}
+                    autoCapitalize="words"
+                    onFocus={() => setNameFocused(true)}
+                    onBlur={() => setNameFocused(false)}
+                  />
+                </View>
+
+                <View style={styles.roleRow}>
+                  <Pressable
+                    style={[styles.roleBtn, role === "mahasiswa" && styles.roleBtnActive]}
+                    onPress={() => setRole("mahasiswa")}
+                  >
+                    <Ionicons name="school-outline" size={18} color={role === "mahasiswa" ? colors.primary : colors.mutedForeground} />
+                    <Text style={[styles.roleBtnText, role === "mahasiswa" && styles.roleBtnTextActive]}>Mahasiswa</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.roleBtn, role === "dosen" && styles.roleBtnActive]}
+                    onPress={() => setRole("dosen")}
+                  >
+                    <Ionicons name="briefcase-outline" size={18} color={role === "dosen" ? colors.primary : colors.mutedForeground} />
+                    <Text style={[styles.roleBtnText, role === "dosen" && styles.roleBtnTextActive]}>Dosen</Text>
+                  </Pressable>
+                </View>
+              </>
+            )}
+
             <View style={[styles.inputWrapper, emailFocused && styles.inputWrapperFocused]}>
               <Ionicons name="mail-outline" size={18} color={emailFocused ? colors.primary : colors.mutedForeground} style={styles.inputIcon} />
               <TextInput
@@ -252,7 +283,6 @@ export default function LoginScreen() {
                 autoCorrect={false}
                 onFocus={() => setEmailFocused(true)}
                 onBlur={() => setEmailFocused(false)}
-                testID="email-input"
               />
             </View>
 
@@ -268,48 +298,31 @@ export default function LoginScreen() {
                 autoCapitalize="none"
                 onFocus={() => setPasswordFocused(true)}
                 onBlur={() => setPasswordFocused(false)}
-                testID="password-input"
               />
               <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={8}>
                 <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={18} color={colors.mutedForeground} />
               </Pressable>
             </View>
 
-            <Pressable style={styles.forgotBtn} onPress={() => {}}>
-              <Text style={styles.forgotText}>Lupa Password?</Text>
-            </Pressable>
-
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
             <Pressable
-              style={[styles.loginBtn, isLoading && styles.loginBtnDisabled]}
-              onPress={handleLogin}
+              style={[styles.submitBtn, isLoading && styles.submitBtnDisabled]}
+              onPress={handleSubmit}
               disabled={isLoading}
-              testID="login-btn"
             >
               {isLoading ? (
                 <ActivityIndicator color={colors.primaryForeground} />
               ) : (
-                <Text style={styles.loginBtnText}>Masuk</Text>
+                <Text style={styles.submitBtnText}>{isRegister ? "Daftar" : "Masuk"}</Text>
               )}
             </Pressable>
           </View>
 
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>atau</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <Pressable style={styles.googleBtn} onPress={handleGoogleLogin}>
-            <Ionicons name="logo-google" size={18} color="#DB4437" />
-            <Text style={styles.googleBtnText}>Masuk dengan Google</Text>
-          </Pressable>
-
-          <View style={styles.registerRow}>
-            <Text style={styles.registerText}>Belum punya akun?</Text>
-            <Pressable onPress={() => {}}>
-              <Text style={styles.registerLink}>Daftar</Text>
+          <View style={styles.switchRow}>
+            <Text style={styles.switchText}>{isRegister ? "Sudah punya akun?" : "Belum punya akun?"}</Text>
+            <Pressable onPress={() => { setIsRegister(!isRegister); setError(""); }}>
+              <Text style={styles.switchLink}>{isRegister ? "Masuk" : "Daftar"}</Text>
             </Pressable>
           </View>
         </ScrollView>

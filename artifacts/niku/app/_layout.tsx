@@ -43,12 +43,12 @@ function AuthGate() {
     const onLogin = segments[0] === "login";
     const inQuiz = segments[0] === "quiz";
 
-    if (!user.isLoggedIn && (inTabsGroup || inQuiz)) {
+    if (!user && (inTabsGroup || inQuiz)) {
       router.replace("/login");
-    } else if (user.isLoggedIn && (onLogin || segments.length === 0)) {
+    } else if (user && (onLogin || segments.length === 0)) {
       router.replace("/(tabs)");
     }
-  }, [user.isLoggedIn, segments, isLoading]);
+  }, [user, segments, isLoading]);
 
   if (isLoading) return null;
 

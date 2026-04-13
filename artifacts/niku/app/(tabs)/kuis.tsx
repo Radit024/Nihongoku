@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   FlatList,
   Platform,
@@ -12,195 +11,136 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppContext } from "@/context/AppContext";
-import { Lesson } from "@/data/seed";
 import { useColors } from "@/hooks/useColors";
-
-const CATEGORY_COLORS: Record<string, string> = {
-  partikel: "#C0272D",
-  konjugasi: "#2563EB",
-  kosakata: "#16A34A",
-  kanji: "#7C3AED",
-};
+import { ApiMaterial } from "@/lib/api";
 
 export default function KuisScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { lessons, lessonProgress } = useAppContext();
+  const { materials, refreshMaterials, quizHistory, refreshQuizHistory } = useAppContext();
+
+  useEffect(() => {
+    refreshMaterials();
+    refreshQuizHistory();
+  }, []);
+
+  const bestScores: Record<string, { score: number; total: number; passed: boolean }> = {};
+  quizHistory.forEach(q => {
+    const existing = bestScores[q.materialId];
+    if (!existing || q.score > existing.score) {
+      bestScores[q.materialId] = { score: q.score, total: q.total, passed: q.passed };
+    }
+  });
+
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
+    container: { flex: 1, backgroundColor: colors.background },
     header: {
       paddingTop: topPad + 16,
       paddingHorizontal: 20,
       paddingBottom: 16,
+      backgroundColor: colors.primary,
     },
     headerTitle: {
-      fontSize: 26,
+      fontSize: 24,
       fontWeight: "800" as const,
-      color: colors.foreground,
+      color: colors.primaryForeground,
       fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-      marginBottom: 4,
     },
     headerSub: {
-      fontSize: 13,
-      color: colors.mutedForeground,
+      fontSize: 14,
+      color: colors.primaryForeground,
+      opacity: 0.8,
+      marginTop: 4,
     },
-    listContent: {
-      paddingHorizontal: 20,
-      gap: 12,
-      paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 90),
-    },
-    quizCard: {
+    list: { padding: 20, paddingBottom: 100 },
+    card: {
       backgroundColor: colors.card,
-      borderRadius: colors.radius,
+      borderRadius: 16,
       padding: 16,
+      marginBottom: 12,
       borderWidth: 1,
       borderColor: colors.border,
-    },
-    quizCardLocked: {
-      opacity: 0.5,
-    },
-    quizTop: {
       flexDirection: "row",
       alignItems: "center",
       gap: 14,
     },
-    quizIconBox: {
-      width: 52,
-      height: 52,
-      borderRadius: 14,
+    iconCircle: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
       alignItems: "center",
       justifyContent: "center",
     },
-    quizIconText: {
-      fontSize: 24,
-      fontWeight: "800" as const,
-      fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-    },
-    quizInfo: {
-      flex: 1,
-    },
-    quizTitle: {
-      fontSize: 14,
-      fontWeight: "700" as const,
+    cardContent: { flex: 1 },
+    cardTitle: {
+      fontSize: 15,
+      fontWeight: "600" as const,
       color: colors.foreground,
-      marginBottom: 4,
     },
-    quizMeta: {
+    cardMeta: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginTop: 4,
+    },
+    metaText: {
       fontSize: 12,
       color: colors.mutedForeground,
-      marginBottom: 6,
     },
-    statusRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 6,
-    },
-    statusBadge: {
+    scoreBadge: {
+      borderRadius: 8,
       paddingHorizontal: 8,
       paddingVertical: 3,
-      borderRadius: 8,
     },
-    statusText: {
+    scoreText: {
       fontSize: 11,
-      fontWeight: "700" as const,
+      fontWeight: "600" as const,
     },
-    xpBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 8,
-      backgroundColor: "#FFF9EC",
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 3,
-    },
-    xpText: {
-      fontSize: 11,
-      fontWeight: "700" as const,
-      color: colors.accent,
-    },
-    startBtn: {
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      borderRadius: 12,
-    },
-    startBtnText: {
-      fontSize: 13,
-      fontWeight: "700" as const,
-    },
-    emptyContainer: {
-      paddingTop: 80,
-      alignItems: "center",
-      gap: 12,
-    },
+    arrow: { marginLeft: "auto" },
     emptyText: {
-      fontSize: 16,
+      textAlign: "center",
       color: colors.mutedForeground,
+      fontSize: 14,
+      marginTop: 40,
     },
   });
 
-  const renderItem = ({ item: lesson }: { item: Lesson }) => {
-    const prog = lessonProgress[lesson.id];
-    const catColor = CATEGORY_COLORS[lesson.category] ?? colors.primary;
-    const catBg = catColor + "20";
-
-    const getStatus = () => {
-      if (lesson.locked) return { label: "Terkunci", color: colors.mutedForeground, bg: colors.muted };
-      if (prog?.quizPassed) return { label: "Lulus", color: colors.correct, bg: colors.correct + "20" };
-      if (prog?.quizAttempts) return { label: `Skor: ${prog.quizScore}%`, color: "#F59E0B", bg: "#FFF9EC" };
-      return { label: "Belum Dimulai", color: catColor, bg: catBg };
+  const getCategoryColor = (cat: string) => {
+    const map: Record<string, string> = {
+      "Tata Bahasa": "#C0272D",
+      "Kosakata": "#2D6A4F",
+      "Kanji": "#7B2D8B",
+      "Percakapan": "#1C2340",
+      "Budaya": "#C9A882",
     };
+    return map[cat] || colors.primary;
+  };
 
-    const status = getStatus();
+  const renderQuiz = ({ item }: { item: ApiMaterial }) => {
+    const best = bestScores[item.id];
+    const catColor = getCategoryColor(item.category);
 
     return (
-      <Pressable
-        style={[styles.quizCard, lesson.locked && styles.quizCardLocked]}
-        onPress={() => {
-          if (lesson.locked) return;
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          router.push(`/quiz/${lesson.id}`);
-        }}
-      >
-        <View style={styles.quizTop}>
-          <View style={[styles.quizIconBox, { backgroundColor: catBg }]}>
-            <Text style={[styles.quizIconText, { color: catColor }]}>{lesson.titleJp}</Text>
-          </View>
-          <View style={styles.quizInfo}>
-            <Text style={styles.quizTitle}>{lesson.title}</Text>
-            <Text style={styles.quizMeta}>10 soal · {lesson.estimatedMinutes} menit</Text>
-            <View style={styles.statusRow}>
-              <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
-                <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
-              </View>
-              {!lesson.locked && (
-                <View style={styles.xpBadge}>
-                  <Ionicons name="star" size={10} color={colors.accent} />
-                  <Text style={styles.xpText}>+{100} XP</Text>
-                </View>
-              )}
-            </View>
-          </View>
-          {lesson.locked ? (
-            <Ionicons name="lock-closed" size={20} color={colors.mutedForeground} />
-          ) : (
-            <Pressable
-              style={[styles.startBtn, { backgroundColor: catColor }]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                router.push(`/quiz/${lesson.id}`);
-              }}
-            >
-              <Text style={[styles.startBtnText, { color: "#FFFFFF" }]}>
-                {prog?.quizAttempts ? "Ulangi" : "Mulai"}
-              </Text>
-            </Pressable>
-          )}
+      <Pressable style={styles.card} onPress={() => router.push(`/quiz/${item.id}`)}>
+        <View style={[styles.iconCircle, { backgroundColor: catColor + "20" }]}>
+          <Ionicons name="help-circle" size={24} color={catColor} />
         </View>
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
+          <View style={styles.cardMeta}>
+            <Text style={styles.metaText}>{item.questionCount} soal</Text>
+            {best && (
+              <View style={[styles.scoreBadge, { backgroundColor: best.passed ? "#2D6A4F20" : "#C0272D20" }]}>
+                <Text style={[styles.scoreText, { color: best.passed ? "#2D6A4F" : "#C0272D" }]}>
+                  {best.score}/{best.total}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.mutedForeground} style={styles.arrow} />
       </Pressable>
     );
   };
@@ -209,21 +149,16 @@ export default function KuisScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Kuis</Text>
-        <Text style={styles.headerSub}>Uji pemahaman kamu</Text>
+        <Text style={styles.headerSub}>{materials.length} kuis tersedia</Text>
       </View>
       <FlatList
-        data={lessons}
-        renderItem={renderItem}
+        data={materials}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
+        renderItem={renderQuiz}
+        contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="help-circle-outline" size={48} color={colors.mutedForeground} />
-            <Text style={styles.emptyText}>Belum ada kuis tersedia</Text>
-          </View>
+          <Text style={styles.emptyText}>Belum ada kuis tersedia</Text>
         }
-        scrollEnabled={lessons.length > 0}
       />
     </View>
   );
