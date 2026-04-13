@@ -328,7 +328,7 @@ export default function BerandaScreen() {
               style={[styles.categoryCard, { backgroundColor: cat.bg }]}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push({ pathname: "/(tabs)/materi", params: { category: cat.id } });
+                router.push("/(tabs)/materi");
               }}
             >
               <Text style={[styles.categoryJp, { color: cat.color }]}>{cat.jp}</Text>

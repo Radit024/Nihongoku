@@ -32,22 +32,35 @@ Japanese language learning EdTech mobile app built with Expo (React Native). Fea
 - **Headings**: Georgia (iOS) / serif (Android/Web)
 - **Body**: Inter
 
-## Lessons (5 total)
+## Learning Path (8 lessons, 4 chapters)
+Sequential unlock chain — must pass each lesson's quiz (≥80%) to continue:
+
+**Chapter 1: Fondasi Bahasa** (Navy #1C2340)
 1. Partikel は (wa) — unlocked by default
-2. Partikel に (ni) — locked, unlocked after passing L1 quiz (80% threshold)
-3. Konjugasi て-Form — unlocked by default
-4. Kosakata Sehari-hari — unlocked by default
-5. Kanji Dasar N5 — unlocked by default
+2. Partikel に (ni) — unlocked by passing lesson 1
+
+**Chapter 2: Tata Bahasa** (Crimson #C0272D)
+3. Konjugasi て-Form — unlocked by passing lesson 2
+4. Bentuk Negatif ない — unlocked by passing lesson 3
+
+**Chapter 3: Kosakata & Percakapan** (Green #16A34A)
+5. Kosakata Sehari-hari — unlocked by passing lesson 4
+6. Angka & Waktu — unlocked by passing lesson 5
+
+**Chapter 4: Kanji Dasar** (Purple #7C3AED)
+7. Kanji JLPT N5 — unlocked by passing lesson 6
+8. Kanji Alam & Kehidupan — unlocked by passing lesson 7
 
 ## Features
 - Login with any email/password (mock auth) or Google (simulated)
 - XP system: 10 XP per correct answer + 20 XP bonus for passing (≥80%)
-- Streak tracking: weekly calendar with flame indicators
+- Streak tracking: day-over-day consecutive logic with lastActiveDate persistence
 - Badge system: 6 badges earned by XP milestones, streak, quiz completions
 - Quiz: 3 phases — lesson content → interactive quiz (green/red feedback) → results
-- Lesson locking: passing L1 quiz unlocks L2
-- Search & filter by category on Materi screen
-- Persistent state via AsyncStorage
+- Structured learning path: chapter-based sequential unlock, visual path in Materi tab
+- Radius scale: sm/md/lg/xl/xxl/full in constants/colors.ts
+- Tab bar: cross-platform Tabs with Ionicons (no iOS-only modules)
+- Persistent state via AsyncStorage (`niku_app_state_v1`)
 
 ## Level System
 - Lv.1 Pemula: 0–99 XP
