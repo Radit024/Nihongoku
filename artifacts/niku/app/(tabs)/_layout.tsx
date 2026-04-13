@@ -5,6 +5,7 @@ import { Platform, StyleSheet, View } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 import { useAppContext } from "@/context/AppContext";
+import { fonts } from "@/constants/fonts";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -20,19 +21,28 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
+        tabBarLabelStyle: {
+          fontFamily: fonts.bold,
+          fontSize: 11,
+        },
         tabBarStyle: {
-          backgroundColor: colors.background,
+          backgroundColor: colors.card,
           borderTopWidth: 1,
           borderTopColor: colors.border,
-          elevation: isAndroid ? 8 : 0,
-          height: Platform.OS === "web" ? 84 : 60,
-          paddingBottom: Platform.OS === "web" ? 16 : 4,
+          elevation: isAndroid ? 12 : 0,
+          height: Platform.OS === "web" ? 88 : 64,
+          paddingBottom: Platform.OS === "web" ? 18 : 8,
+          paddingTop: 6,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.06,
+          shadowRadius: 12,
         },
         tabBarBackground: () => (
           <View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: colors.background },
+              { backgroundColor: colors.card },
             ]}
           />
         ),
@@ -43,7 +53,7 @@ export default function TabLayout() {
         options={{
           title: "Beranda",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "home" : "home-outline"} size={22} color={color} />
+            <Ionicons name={focused ? "home" : "home-outline"} size={24} color={color} />
           ),
         }}
       />
@@ -52,7 +62,7 @@ export default function TabLayout() {
         options={{
           title: "Materi",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "book" : "book-outline"} size={22} color={color} />
+            <Ionicons name={focused ? "book" : "book-outline"} size={24} color={color} />
           ),
         }}
       />
@@ -62,7 +72,7 @@ export default function TabLayout() {
           title: "Upload",
           href: isDosen ? undefined : null,
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "cloud-upload" : "cloud-upload-outline"} size={22} color={color} />
+            <Ionicons name={focused ? "cloud-upload" : "cloud-upload-outline"} size={24} color={color} />
           ),
         }}
       />
@@ -71,16 +81,16 @@ export default function TabLayout() {
         options={{
           title: "Kuis",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "help-circle" : "help-circle-outline"} size={22} color={color} />
+            <Ionicons name={focused ? "help-circle" : "help-circle-outline"} size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="progress"
         options={{
-          title: "Progress",
+          title: "Profil",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "bar-chart" : "bar-chart-outline"} size={22} color={color} />
+            <Ionicons name={focused ? "person-circle" : "person-circle-outline"} size={24} color={color} />
           ),
         }}
       />

@@ -12,13 +12,14 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppContext } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
+import { fonts } from "@/constants/fonts";
 
 const CATEGORIES = [
-  { key: "Tata Bahasa", icon: "language-outline" as const, color: "#C0272D" },
-  { key: "Kosakata", icon: "list-outline" as const, color: "#2D6A4F" },
-  { key: "Kanji", icon: "brush-outline" as const, color: "#7B2D8B" },
-  { key: "Percakapan", icon: "chatbubbles-outline" as const, color: "#1C2340" },
-  { key: "Budaya", icon: "globe-outline" as const, color: "#C9A882" },
+  { key: "Tata Bahasa", icon: "language-outline" as const, color: "#C0272D", bg: "#FFF0F0" },
+  { key: "Kosakata", icon: "list-outline" as const, color: "#059669", bg: "#ECFDF5" },
+  { key: "Kanji", icon: "brush-outline" as const, color: "#7C3AED", bg: "#F5F3FF" },
+  { key: "Percakapan", icon: "chatbubbles-outline" as const, color: "#2563EB", bg: "#EFF6FF" },
+  { key: "Budaya", icon: "globe-outline" as const, color: "#D97706", bg: "#FFFBEB" },
 ];
 
 export default function BerandaScreen() {
@@ -37,6 +38,10 @@ export default function BerandaScreen() {
   const levelInfo = getLevelInfo();
   const isDosen = user?.role === "dosen";
 
+  const xpInCurrentLevel = xp - levelInfo.xpStart;
+  const xpNeeded = levelInfo.xpEnd - levelInfo.xpStart;
+  const xpPct = xpNeeded > 0 ? Math.min(100, Math.round((xpInCurrentLevel / xpNeeded) * 100)) : 100;
+
   const categoryCounts: Record<string, number> = {};
   materials.forEach(m => {
     categoryCounts[m.category] = (categoryCounts[m.category] || 0) + 1;
@@ -48,66 +53,118 @@ export default function BerandaScreen() {
   const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     header: {
-      paddingTop: topPad + 16,
+      paddingTop: topPad + 20,
       paddingHorizontal: 20,
-      paddingBottom: 20,
+      paddingBottom: 28,
       backgroundColor: colors.primary,
-      borderBottomLeftRadius: 24,
-      borderBottomRightRadius: 24,
+      borderBottomLeftRadius: 32,
+      borderBottomRightRadius: 32,
+    },
+    greetRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
     },
     greeting: {
       fontSize: 14,
+      fontFamily: fonts.semiBold,
       color: colors.primaryForeground,
       opacity: 0.8,
     },
     headerName: {
-      fontSize: 24,
-      fontWeight: "800" as const,
+      fontSize: 26,
+      fontFamily: fonts.black,
       color: colors.primaryForeground,
-      fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
+      marginTop: 2,
     },
     roleBadge: {
       alignSelf: "flex-start",
-      backgroundColor: "rgba(255,255,255,0.2)",
-      borderRadius: 8,
-      paddingHorizontal: 10,
-      paddingVertical: 3,
-      marginTop: 6,
+      backgroundColor: "rgba(255,255,255,0.22)",
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      marginTop: 8,
     },
     roleBadgeText: {
       fontSize: 12,
+      fontFamily: fonts.bold,
       color: colors.primaryForeground,
-      fontWeight: "600" as const,
+    },
+    streakBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: "rgba(255,255,255,0.18)",
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    streakText: {
+      fontSize: 14,
+      fontFamily: fonts.bold,
+      color: colors.primaryForeground,
+    },
+    xpRow: {
+      marginTop: 18,
+    },
+    xpLabelRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 6,
+    },
+    xpLabel: {
+      fontSize: 12,
+      fontFamily: fonts.semiBold,
+      color: colors.primaryForeground,
+      opacity: 0.8,
+    },
+    xpVal: {
+      fontSize: 13,
+      fontFamily: fonts.extraBold,
+      color: colors.primaryForeground,
+    },
+    xpBar: {
+      height: 8,
+      backgroundColor: "rgba(255,255,255,0.25)",
+      borderRadius: 4,
+    },
+    xpFill: {
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.primaryForeground,
     },
     statsRow: {
       flexDirection: "row",
-      gap: 12,
-      marginTop: 16,
+      gap: 10,
+      marginTop: 14,
     },
     statCard: {
       flex: 1,
       backgroundColor: "rgba(255,255,255,0.15)",
-      borderRadius: 12,
+      borderRadius: 16,
       padding: 12,
       alignItems: "center",
     },
     statVal: {
       fontSize: 20,
-      fontWeight: "700" as const,
+      fontFamily: fonts.black,
       color: colors.primaryForeground,
     },
     statLabel: {
       fontSize: 11,
+      fontFamily: fonts.semiBold,
       color: colors.primaryForeground,
-      opacity: 0.8,
+      opacity: 0.75,
       marginTop: 2,
     },
-    body: { padding: 20 },
+    body: { padding: 20, paddingBottom: 20 },
     sectionTitle: {
       fontSize: 18,
-      fontWeight: "700" as const,
+      fontFamily: fonts.extraBold,
       color: colors.foreground,
-      marginBottom: 12,
+      marginBottom: 14,
+      marginTop: 4,
     },
     categoryGrid: {
       flexDirection: "row",
@@ -117,53 +174,86 @@ export default function BerandaScreen() {
     categoryCard: {
       width: "47%" as any,
       backgroundColor: colors.card,
-      borderRadius: 16,
+      borderRadius: 20,
       padding: 16,
-      borderWidth: 1,
-      borderColor: colors.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 3,
     },
     categoryIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
+      width: 44,
+      height: 44,
+      borderRadius: 14,
       alignItems: "center",
       justifyContent: "center",
       marginBottom: 10,
     },
     categoryName: {
       fontSize: 14,
-      fontWeight: "600" as const,
+      fontFamily: fonts.bold,
       color: colors.foreground,
     },
     categoryCount: {
       fontSize: 12,
+      fontFamily: fonts.semiBold,
       color: colors.mutedForeground,
       marginTop: 2,
     },
     ctaCard: {
       backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 16,
+      borderRadius: 20,
+      padding: 18,
       marginTop: 20,
-      borderWidth: 1,
-      borderColor: colors.border,
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
+      gap: 14,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.07,
+      shadowRadius: 10,
+      elevation: 4,
+      borderLeftWidth: 4,
+      borderLeftColor: colors.primary,
     },
-    ctaText: {
-      flex: 1,
-      fontSize: 14,
+    ctaIconBox: {
+      width: 48,
+      height: 48,
+      borderRadius: 14,
+      backgroundColor: "#FFF0F0",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    ctaContent: { flex: 1 },
+    ctaTitle: {
+      fontSize: 15,
+      fontFamily: fonts.extraBold,
       color: colors.foreground,
     },
-    ctaBold: {
-      fontWeight: "700" as const,
+    ctaSub: {
+      fontSize: 13,
+      fontFamily: fonts.regular,
+      color: colors.mutedForeground,
+      marginTop: 2,
+    },
+    emptyBox: {
+      backgroundColor: colors.card,
+      borderRadius: 20,
+      padding: 28,
+      alignItems: "center",
+      gap: 10,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
     },
     emptyText: {
       fontSize: 14,
+      fontFamily: fonts.semiBold,
       color: colors.mutedForeground,
       textAlign: "center",
-      marginTop: 30,
     },
   });
 
@@ -175,26 +265,45 @@ export default function BerandaScreen() {
       ListHeaderComponent={
         <>
           <View style={styles.header}>
-            <Text style={styles.greeting}>Konnichiwa,</Text>
-            <Text style={styles.headerName}>{firstName}</Text>
+            <View style={styles.greetRow}>
+              <View>
+                <Text style={styles.greeting}>Konnichiwa,</Text>
+                <Text style={styles.headerName}>{firstName}</Text>
+              </View>
+              <View style={styles.streakBadge}>
+                <Ionicons name="flame" size={16} color="#FCD34D" />
+                <Text style={styles.streakText}>{streak}</Text>
+              </View>
+            </View>
+
             {isDosen && (
               <View style={styles.roleBadge}>
                 <Text style={styles.roleBadgeText}>Dosen</Text>
               </View>
             )}
+
+            <View style={styles.xpRow}>
+              <View style={styles.xpLabelRow}>
+                <Text style={styles.xpLabel}>Lv.{levelInfo.level} {levelInfo.title}</Text>
+                <Text style={styles.xpVal}>{xp} XP</Text>
+              </View>
+              <View style={styles.xpBar}>
+                <View style={[styles.xpFill, { width: `${xpPct}%` }]} />
+              </View>
+            </View>
+
             <View style={styles.statsRow}>
               <View style={styles.statCard}>
                 <Text style={styles.statVal}>{xp}</Text>
-                <Text style={styles.statLabel}>XP</Text>
+                <Text style={styles.statLabel}>Total XP</Text>
               </View>
               <View style={styles.statCard}>
-                <Ionicons name="flame" size={16} color={colors.primaryForeground} />
-                <Text style={styles.statVal}>{streak}</Text>
-                <Text style={styles.statLabel}>Streak</Text>
+                <Text style={styles.statVal}>{materials.length}</Text>
+                <Text style={styles.statLabel}>Materi</Text>
               </View>
               <View style={styles.statCard}>
-                <Text style={styles.statVal}>Lv{levelInfo.level}</Text>
-                <Text style={styles.statLabel}>{levelInfo.title}</Text>
+                <Text style={styles.statVal}>{progressData?.passedQuizzes ?? 0}</Text>
+                <Text style={styles.statLabel}>Lulus</Text>
               </View>
             </View>
           </View>
@@ -209,7 +318,7 @@ export default function BerandaScreen() {
                     style={styles.categoryCard}
                     onPress={() => router.push({ pathname: "/(tabs)/materi", params: { filter: cat.key } })}
                   >
-                    <View style={[styles.categoryIcon, { backgroundColor: cat.color + "20" }]}>
+                    <View style={[styles.categoryIcon, { backgroundColor: cat.bg }]}>
                       <Ionicons name={cat.icon} size={22} color={cat.color} />
                     </View>
                     <Text style={styles.categoryName}>{cat.key}</Text>
@@ -218,31 +327,38 @@ export default function BerandaScreen() {
                 ))}
               </View>
             ) : (
-              <Text style={styles.emptyText}>
-                {isDosen
-                  ? "Belum ada materi. Mulai unggah materi di tab Upload!"
-                  : "Belum ada materi tersedia. Tunggu dosen mengunggah materi."}
-              </Text>
+              <View style={styles.emptyBox}>
+                <Ionicons name="book-outline" size={36} color={colors.mutedForeground} />
+                <Text style={styles.emptyText}>
+                  {isDosen
+                    ? "Belum ada materi.\nMulai unggah di tab Upload!"
+                    : "Belum ada materi.\nTunggu dosen mengunggah materi."}
+                </Text>
+              </View>
             )}
 
             {isDosen && (
               <Pressable style={styles.ctaCard} onPress={() => router.push("/(tabs)/upload")}>
-                <Ionicons name="cloud-upload-outline" size={28} color={colors.primary} />
-                <Text style={styles.ctaText}>
-                  <Text style={styles.ctaBold}>Upload Materi Baru</Text>
-                  {"\n"}Unggah PDF atau foto, AI otomatis buat soal kuis
-                </Text>
+                <View style={styles.ctaIconBox}>
+                  <Ionicons name="cloud-upload-outline" size={26} color={colors.primary} />
+                </View>
+                <View style={styles.ctaContent}>
+                  <Text style={styles.ctaTitle}>Upload Materi Baru</Text>
+                  <Text style={styles.ctaSub}>PDF atau foto — AI buat soal otomatis</Text>
+                </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.mutedForeground} />
               </Pressable>
             )}
 
             {!isDosen && materials.length > 0 && (
               <Pressable style={styles.ctaCard} onPress={() => router.push("/(tabs)/kuis")}>
-                <Ionicons name="help-circle-outline" size={28} color={colors.primary} />
-                <Text style={styles.ctaText}>
-                  <Text style={styles.ctaBold}>Mulai Kuis</Text>
-                  {"\n"}{materials.length} materi tersedia
-                </Text>
+                <View style={styles.ctaIconBox}>
+                  <Ionicons name="help-circle-outline" size={26} color={colors.primary} />
+                </View>
+                <View style={styles.ctaContent}>
+                  <Text style={styles.ctaTitle}>Mulai Kuis</Text>
+                  <Text style={styles.ctaSub}>{materials.length} kuis tersedia untukmu</Text>
+                </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.mutedForeground} />
               </Pressable>
             )}

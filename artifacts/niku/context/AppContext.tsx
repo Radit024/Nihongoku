@@ -16,15 +16,15 @@ export interface AppContextType {
   refreshMaterials: () => Promise<void>;
   refreshProgress: () => Promise<void>;
   refreshQuizHistory: () => Promise<void>;
-  getLevelInfo: () => { level: number; title: string; titleJp: string };
+  getLevelInfo: () => { level: number; title: string; titleJp: string; xpStart: number; xpEnd: number };
 }
 
-function getLevelFromXP(xp: number): { level: number; title: string; titleJp: string } {
-  if (xp >= 1000) return { level: 5, title: "Master", titleJp: "Masta" };
-  if (xp >= 600) return { level: 4, title: "Mahir", titleJp: "Joukyuu" };
-  if (xp >= 300) return { level: 3, title: "Menengah", titleJp: "Chuukyuu" };
-  if (xp >= 100) return { level: 2, title: "Dasar", titleJp: "Kiso" };
-  return { level: 1, title: "Pemula", titleJp: "Shoshinsha" };
+function getLevelFromXP(xp: number): { level: number; title: string; titleJp: string; xpStart: number; xpEnd: number } {
+  if (xp >= 1000) return { level: 5, title: "Master", titleJp: "Masta", xpStart: 1000, xpEnd: 1000 };
+  if (xp >= 600) return { level: 4, title: "Mahir", titleJp: "Joukyuu", xpStart: 600, xpEnd: 1000 };
+  if (xp >= 300) return { level: 3, title: "Menengah", titleJp: "Chuukyuu", xpStart: 300, xpEnd: 600 };
+  if (xp >= 100) return { level: 2, title: "Dasar", titleJp: "Kiso", xpStart: 100, xpEnd: 300 };
+  return { level: 1, title: "Pemula", titleJp: "Shoshinsha", xpStart: 0, xpEnd: 100 };
 }
 
 const AppContext = createContext<AppContextType | null>(null);

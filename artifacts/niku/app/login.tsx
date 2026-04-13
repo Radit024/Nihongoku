@@ -16,6 +16,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppContext } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
+import { fonts } from "@/constants/fonts";
 
 export default function LoginScreen() {
   const colors = useColors();
@@ -67,66 +68,110 @@ export default function LoginScreen() {
       flex: 1,
       backgroundColor: colors.background,
     },
+    blob1: {
+      position: "absolute",
+      width: 200,
+      height: 200,
+      borderRadius: 100,
+      backgroundColor: colors.primary,
+      opacity: 0.07,
+      top: -60,
+      right: -60,
+    },
+    blob2: {
+      position: "absolute",
+      width: 160,
+      height: 160,
+      borderRadius: 80,
+      backgroundColor: colors.accent,
+      opacity: 0.1,
+      bottom: 120,
+      left: -50,
+    },
+    blob3: {
+      position: "absolute",
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      backgroundColor: colors.sakura,
+      opacity: 0.15,
+      top: 200,
+      right: 20,
+    },
     scroll: {
       flexGrow: 1,
       justifyContent: "center",
       paddingHorizontal: 28,
-      paddingTop: insets.top + (Platform.OS === "web" ? 67 : 0),
+      paddingTop: insets.top + (Platform.OS === "web" ? 67 : 20),
       paddingBottom: insets.bottom + 40,
     },
     topDecoration: {
       alignItems: "center",
-      marginBottom: 36,
+      marginBottom: 40,
     },
     logoCircle: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
+      width: 88,
+      height: 88,
+      borderRadius: 44,
       backgroundColor: colors.primary,
       alignItems: "center",
       justifyContent: "center",
-      marginBottom: 16,
+      marginBottom: 18,
       shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.4,
-      shadowRadius: 16,
-      elevation: 12,
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.35,
+      shadowRadius: 20,
+      elevation: 14,
     },
     logoText: {
-      fontSize: 30,
+      fontSize: 34,
       fontWeight: "800" as const,
       color: colors.primaryForeground,
-      fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-      letterSpacing: 3,
+      fontFamily: fonts.black,
     },
     appName: {
-      fontSize: 32,
-      fontWeight: "800" as const,
+      fontSize: 36,
+      fontFamily: fonts.black,
       color: colors.primary,
-      fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-      letterSpacing: 4,
+      letterSpacing: 6,
     },
     appSubtitle: {
-      fontSize: 14,
+      fontSize: 12,
+      fontFamily: fonts.semiBold,
       color: colors.mutedForeground,
-      marginTop: 4,
-      letterSpacing: 2,
+      marginTop: 2,
+      letterSpacing: 3,
     },
     tagline: {
       fontSize: 15,
+      fontFamily: fonts.regular,
       color: colors.foreground,
-      marginTop: 8,
-      opacity: 0.7,
+      marginTop: 10,
+      opacity: 0.65,
     },
-    formSection: {
-      gap: 14,
+    formCard: {
+      backgroundColor: colors.card,
+      borderRadius: 28,
+      padding: 24,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 20,
+      elevation: 6,
+      gap: 12,
       marginBottom: 8,
+    },
+    formLabel: {
+      fontSize: 18,
+      fontFamily: fonts.extraBold,
+      color: colors.foreground,
+      marginBottom: 4,
     },
     inputWrapper: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: colors.card,
-      borderRadius: colors.radius,
+      backgroundColor: colors.background,
+      borderRadius: 16,
       borderWidth: 1.5,
       borderColor: colors.border,
       paddingHorizontal: 14,
@@ -134,11 +179,7 @@ export default function LoginScreen() {
     },
     inputWrapperFocused: {
       borderColor: colors.primary,
-      shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.15,
-      shadowRadius: 6,
-      elevation: 3,
+      backgroundColor: "#FFF5F5",
     },
     inputIcon: {
       marginRight: 10,
@@ -146,11 +187,12 @@ export default function LoginScreen() {
     input: {
       flex: 1,
       fontSize: 15,
+      fontFamily: fonts.semiBold,
       color: colors.foreground,
     },
     roleRow: {
       flexDirection: "row",
-      gap: 12,
+      gap: 10,
     },
     roleBtn: {
       flex: 1,
@@ -159,70 +201,81 @@ export default function LoginScreen() {
       justifyContent: "center",
       gap: 8,
       height: 48,
-      borderRadius: colors.radius,
-      borderWidth: 1.5,
+      borderRadius: 14,
+      borderWidth: 2,
       borderColor: colors.border,
-      backgroundColor: colors.card,
+      backgroundColor: colors.background,
     },
     roleBtnActive: {
       borderColor: colors.primary,
-      backgroundColor: colors.secondary,
+      backgroundColor: "#FFF0F0",
     },
     roleBtnText: {
       fontSize: 14,
-      fontWeight: "600" as const,
+      fontFamily: fonts.bold,
       color: colors.mutedForeground,
     },
     roleBtnTextActive: {
       color: colors.primary,
     },
+    errorBox: {
+      backgroundColor: "#FFF0F0",
+      borderRadius: 12,
+      padding: 10,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.destructive,
+    },
     errorText: {
       color: colors.destructive,
       fontSize: 13,
-      textAlign: "center",
+      fontFamily: fonts.semiBold,
     },
     submitBtn: {
       backgroundColor: colors.primary,
-      borderRadius: colors.radius,
-      height: 52,
+      borderRadius: 18,
+      height: 56,
       alignItems: "center",
       justifyContent: "center",
-      marginTop: 8,
+      marginTop: 4,
       shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.35,
-      shadowRadius: 12,
-      elevation: 8,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.4,
+      shadowRadius: 14,
+      elevation: 10,
     },
     submitBtnDisabled: {
       opacity: 0.7,
     },
     submitBtnText: {
       color: colors.primaryForeground,
-      fontSize: 16,
-      fontWeight: "700" as const,
+      fontSize: 17,
+      fontFamily: fonts.extraBold,
       letterSpacing: 0.5,
     },
     switchRow: {
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
-      marginTop: 24,
+      marginTop: 20,
       gap: 4,
     },
     switchText: {
       color: colors.mutedForeground,
       fontSize: 14,
+      fontFamily: fonts.regular,
     },
     switchLink: {
       color: colors.primary,
       fontSize: 14,
-      fontWeight: "700" as const,
+      fontFamily: fonts.extraBold,
     },
   });
 
   return (
     <View style={styles.container}>
+      <View style={styles.blob1} />
+      <View style={styles.blob2} />
+      <View style={styles.blob3} />
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.topDecoration}>
@@ -234,7 +287,9 @@ export default function LoginScreen() {
             <Text style={styles.tagline}>Belajar Bahasa Jepang dengan Mudah</Text>
           </View>
 
-          <View style={styles.formSection}>
+          <View style={styles.formCard}>
+            <Text style={styles.formLabel}>{isRegister ? "Buat Akun" : "Masuk"}</Text>
+
             {isRegister && (
               <>
                 <View style={[styles.inputWrapper, nameFocused && styles.inputWrapperFocused]}>
@@ -304,7 +359,11 @@ export default function LoginScreen() {
               </Pressable>
             </View>
 
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            {error ? (
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : null}
 
             <Pressable
               style={[styles.submitBtn, isLoading && styles.submitBtnDisabled]}
@@ -314,7 +373,7 @@ export default function LoginScreen() {
               {isLoading ? (
                 <ActivityIndicator color={colors.primaryForeground} />
               ) : (
-                <Text style={styles.submitBtnText}>{isRegister ? "Daftar" : "Masuk"}</Text>
+                <Text style={styles.submitBtnText}>{isRegister ? "Daftar Sekarang" : "Masuk"}</Text>
               )}
             </Pressable>
           </View>

@@ -14,7 +14,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppContext } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
-import { api, ApiMaterial, ApiQuestion, QuizResult } from "@/lib/api";
+import { api, ApiMaterial, QuizResult } from "@/lib/api";
+import { fonts } from "@/constants/fonts";
 
 type Phase = "lesson" | "quiz" | "result";
 
@@ -97,96 +98,144 @@ export default function QuizScreen() {
 
   const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
-    center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 20 },
+    center: { flex: 1, alignItems: "center", justifyContent: "center", padding: 20, gap: 12 },
     topBar: {
       flexDirection: "row",
       alignItems: "center",
-      paddingTop: topPad + 8,
+      paddingTop: topPad + 10,
       paddingHorizontal: 16,
-      paddingBottom: 12,
+      paddingBottom: 14,
       backgroundColor: colors.card,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
     },
-    backBtn: { padding: 8 },
+    backBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      backgroundColor: colors.background,
+      alignItems: "center",
+      justifyContent: "center",
+    },
     topTitle: {
       flex: 1,
       fontSize: 16,
-      fontWeight: "600" as const,
+      fontFamily: fonts.extraBold,
       color: colors.foreground,
       textAlign: "center",
       marginRight: 36,
     },
     scroll: { padding: 20, paddingBottom: 100 },
-    lessonTitle: {
-      fontSize: 22,
-      fontWeight: "800" as const,
-      color: colors.foreground,
-      fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-      marginBottom: 8,
-    },
-    categoryBadge: {
+
+    lessonCategoryBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
       alignSelf: "flex-start",
-      backgroundColor: colors.secondary,
-      borderRadius: 8,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      marginBottom: 16,
+      borderRadius: 20,
+      paddingHorizontal: 12,
+      paddingVertical: 5,
+      marginBottom: 12,
     },
-    categoryText: {
+    lessonCategoryText: {
       fontSize: 12,
-      color: colors.primary,
-      fontWeight: "600" as const,
+      fontFamily: fonts.bold,
+    },
+    lessonTitle: {
+      fontSize: 24,
+      fontFamily: fonts.black,
+      color: colors.foreground,
+      marginBottom: 16,
+      lineHeight: 32,
+    },
+    lessonContentBox: {
+      backgroundColor: colors.card,
+      borderRadius: 20,
+      padding: 18,
+      marginBottom: 24,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 3,
     },
     lessonContent: {
       fontSize: 15,
+      fontFamily: fonts.regular,
       color: colors.foreground,
-      lineHeight: 24,
-      marginBottom: 24,
+      lineHeight: 26,
     },
     startBtn: {
       backgroundColor: colors.primary,
-      borderRadius: 16,
-      height: 52,
+      borderRadius: 20,
+      height: 56,
       alignItems: "center",
       justifyContent: "center",
+      flexDirection: "row",
+      gap: 10,
       shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 12,
-      elevation: 8,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.35,
+      shadowRadius: 14,
+      elevation: 10,
     },
     startBtnText: {
       color: colors.primaryForeground,
       fontSize: 16,
-      fontWeight: "700" as const,
+      fontFamily: fonts.extraBold,
     },
-    progressBar: {
-      height: 4,
-      backgroundColor: colors.border,
-      borderRadius: 2,
+
+    progressContainer: {
       marginBottom: 20,
     },
+    progressTop: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 8,
+    },
+    progressLabel: {
+      fontSize: 13,
+      fontFamily: fonts.semiBold,
+      color: colors.mutedForeground,
+    },
+    progressCount: {
+      fontSize: 13,
+      fontFamily: fonts.extraBold,
+      color: colors.primary,
+    },
+    progressTrack: {
+      height: 6,
+      backgroundColor: colors.border,
+      borderRadius: 3,
+    },
     progressFill: {
-      height: 4,
-      borderRadius: 2,
+      height: 6,
+      borderRadius: 3,
       backgroundColor: colors.primary,
     },
-    questionNum: {
-      fontSize: 13,
-      color: colors.mutedForeground,
-      marginBottom: 8,
+
+    questionCard: {
+      backgroundColor: colors.card,
+      borderRadius: 20,
+      padding: 20,
+      marginBottom: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 3,
     },
     questionText: {
       fontSize: 18,
-      fontWeight: "700" as const,
+      fontFamily: fonts.extraBold,
       color: colors.foreground,
-      marginBottom: 20,
-      lineHeight: 26,
+      lineHeight: 28,
     },
+
     optionBtn: {
       backgroundColor: colors.card,
-      borderRadius: 12,
+      borderRadius: 16,
       padding: 16,
       marginBottom: 10,
       borderWidth: 2,
@@ -194,119 +243,179 @@ export default function QuizScreen() {
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.04,
+      shadowRadius: 4,
+      elevation: 2,
     },
     optionCorrect: {
-      borderColor: "#2D6A4F",
-      backgroundColor: "#2D6A4F10",
+      borderColor: "#059669",
+      backgroundColor: "#ECFDF5",
     },
     optionWrong: {
       borderColor: "#C0272D",
-      backgroundColor: "#C0272D10",
+      backgroundColor: "#FFF0F0",
     },
     optionLetter: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
+      width: 32,
+      height: 32,
+      borderRadius: 10,
       backgroundColor: colors.border,
       alignItems: "center",
       justifyContent: "center",
     },
+    optionLetterCorrect: { backgroundColor: "#059669" },
+    optionLetterWrong: { backgroundColor: "#C0272D" },
     optionLetterText: {
       fontSize: 13,
-      fontWeight: "700" as const,
+      fontFamily: fonts.bold,
       color: colors.foreground,
     },
+    optionLetterTextActive: { color: "#fff" },
     optionText: {
       flex: 1,
       fontSize: 15,
+      fontFamily: fonts.semiBold,
       color: colors.foreground,
     },
+
     explanationBox: {
-      backgroundColor: colors.secondary,
-      borderRadius: 12,
-      padding: 14,
-      marginTop: 8,
+      backgroundColor: "#FFFBEB",
+      borderRadius: 16,
+      padding: 16,
+      marginTop: 4,
       marginBottom: 16,
+      borderLeftWidth: 3,
+      borderLeftColor: "#D97706",
+    },
+    explanationLabel: {
+      fontSize: 11,
+      fontFamily: fonts.bold,
+      color: "#D97706",
+      marginBottom: 4,
+      letterSpacing: 0.5,
     },
     explanationText: {
-      fontSize: 13,
+      fontSize: 14,
+      fontFamily: fonts.regular,
       color: colors.foreground,
-      lineHeight: 20,
+      lineHeight: 21,
     },
     nextBtn: {
       backgroundColor: colors.primary,
-      borderRadius: 12,
-      height: 48,
-      alignItems: "center",
-      justifyContent: "center",
-      marginTop: 8,
-    },
-    nextBtnText: {
-      color: colors.primaryForeground,
-      fontSize: 15,
-      fontWeight: "700" as const,
-    },
-    resultCard: {
-      backgroundColor: colors.card,
-      borderRadius: 20,
-      padding: 24,
-      alignItems: "center",
-      marginBottom: 20,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    resultIcon: {
-      marginBottom: 16,
-    },
-    resultTitle: {
-      fontSize: 24,
-      fontWeight: "800" as const,
-      color: colors.foreground,
-      fontFamily: Platform.OS === "ios" ? "Georgia" : "serif",
-      marginBottom: 8,
-    },
-    resultScore: {
-      fontSize: 40,
-      fontWeight: "800" as const,
-      color: colors.primary,
-    },
-    resultSub: {
-      fontSize: 14,
-      color: colors.mutedForeground,
-      marginTop: 4,
-    },
-    resultRow: {
-      flexDirection: "row",
-      gap: 16,
-      marginTop: 20,
-    },
-    resultStat: {
-      alignItems: "center",
-    },
-    resultStatVal: {
-      fontSize: 20,
-      fontWeight: "700" as const,
-      color: colors.foreground,
-    },
-    resultStatLabel: {
-      fontSize: 12,
-      color: colors.mutedForeground,
-      marginTop: 2,
-    },
-    doneBtn: {
-      backgroundColor: colors.primary,
-      borderRadius: 16,
+      borderRadius: 18,
       height: 52,
       alignItems: "center",
       justifyContent: "center",
+      marginTop: 4,
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 10,
+      elevation: 8,
+    },
+    nextBtnText: {
+      color: colors.primaryForeground,
+      fontSize: 16,
+      fontFamily: fonts.extraBold,
+    },
+
+    resultHeaderBox: {
+      alignItems: "center",
+      padding: 28,
+      backgroundColor: colors.card,
+      borderRadius: 28,
+      marginBottom: 16,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 16,
+      elevation: 6,
+    },
+    resultIconBg: {
+      width: 88,
+      height: 88,
+      borderRadius: 44,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 16,
+    },
+    resultTitle: {
+      fontSize: 26,
+      fontFamily: fonts.black,
+      color: colors.foreground,
+      marginBottom: 6,
+    },
+    resultScore: {
+      fontSize: 52,
+      fontFamily: fonts.black,
+      color: colors.primary,
+    },
+    resultScoreLabel: {
+      fontSize: 14,
+      fontFamily: fonts.semiBold,
+      color: colors.mutedForeground,
+    },
+    resultSub: {
+      fontSize: 14,
+      fontFamily: fonts.regular,
+      color: colors.mutedForeground,
+      textAlign: "center",
+      marginTop: 8,
+      lineHeight: 20,
+    },
+
+    resultStatsRow: {
+      flexDirection: "row",
+      gap: 10,
+      marginBottom: 20,
+    },
+    resultStatCard: {
+      flex: 1,
+      backgroundColor: colors.card,
+      borderRadius: 18,
+      padding: 16,
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 6,
+      elevation: 3,
+    },
+    resultStatVal: {
+      fontSize: 22,
+      fontFamily: fonts.black,
+      color: colors.foreground,
+    },
+    resultStatLabel: {
+      fontSize: 11,
+      fontFamily: fonts.semiBold,
+      color: colors.mutedForeground,
+      marginTop: 3,
+    },
+
+    doneBtn: {
+      backgroundColor: colors.primary,
+      borderRadius: 20,
+      height: 56,
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.35,
+      shadowRadius: 14,
+      elevation: 10,
     },
     doneBtnText: {
       color: colors.primaryForeground,
-      fontSize: 16,
-      fontWeight: "700" as const,
+      fontSize: 17,
+      fontFamily: fonts.extraBold,
     },
+
     errorText: {
       fontSize: 14,
+      fontFamily: fonts.semiBold,
       color: colors.destructive,
       textAlign: "center",
     },
@@ -316,6 +425,7 @@ export default function QuizScreen() {
     return (
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.errorText, { color: colors.mutedForeground }]}>Memuat materi...</Text>
       </View>
     );
   }
@@ -323,34 +433,46 @@ export default function QuizScreen() {
   if (error || !material) {
     return (
       <View style={[styles.container, styles.center]}>
+        <Ionicons name="alert-circle-outline" size={48} color={colors.destructive} />
         <Text style={styles.errorText}>{error || "Materi tidak ditemukan"}</Text>
-        <Pressable style={[styles.nextBtn, { marginTop: 16, width: 200 }]} onPress={() => router.back()}>
+        <Pressable style={[styles.nextBtn, { width: 200 }]} onPress={() => router.back()}>
           <Text style={styles.nextBtnText}>Kembali</Text>
         </Pressable>
       </View>
     );
   }
 
+  const categoryColor = {
+    "Tata Bahasa": "#C0272D",
+    "Kosakata": "#059669",
+    "Kanji": "#7C3AED",
+    "Percakapan": "#2563EB",
+    "Budaya": "#D97706",
+  }[material.category] || colors.primary;
+
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
         <Pressable style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color={colors.foreground} />
+          <Ionicons name="arrow-back" size={20} color={colors.foreground} />
         </Pressable>
         <Text style={styles.topTitle} numberOfLines={1}>
-          {phase === "lesson" ? material.title : phase === "quiz" ? `Soal ${currentQ + 1}/${questions.length}` : "Hasil"}
+          {phase === "lesson" ? "Baca Materi" : phase === "quiz" ? `Soal ${currentQ + 1}/${questions.length}` : "Hasil Kuis"}
         </Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {phase === "lesson" && (
           <>
-            <Text style={styles.lessonTitle}>{material.title}</Text>
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryText}>{material.category}</Text>
+            <View style={[styles.lessonCategoryBadge, { backgroundColor: categoryColor + "18" }]}>
+              <Text style={[styles.lessonCategoryText, { color: categoryColor }]}>{material.category}</Text>
             </View>
-            <Text style={styles.lessonContent}>{material.lessonContent}</Text>
+            <Text style={styles.lessonTitle}>{material.title}</Text>
+            <View style={styles.lessonContentBox}>
+              <Text style={styles.lessonContent}>{material.lessonContent}</Text>
+            </View>
             <Pressable style={styles.startBtn} onPress={() => setPhase("quiz")}>
+              <Ionicons name="play-circle" size={22} color={colors.primaryForeground} />
               <Text style={styles.startBtnText}>Mulai Kuis ({questions.length} Soal)</Text>
             </Pressable>
           </>
@@ -358,19 +480,36 @@ export default function QuizScreen() {
 
         {phase === "quiz" && question && (
           <>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: `${((currentQ + 1) / questions.length) * 100}%` }]} />
+            <View style={styles.progressContainer}>
+              <View style={styles.progressTop}>
+                <Text style={styles.progressLabel}>Soal {currentQ + 1} dari {questions.length}</Text>
+                <Text style={styles.progressCount}>{Math.round(((currentQ + 1) / questions.length) * 100)}%</Text>
+              </View>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: `${((currentQ + 1) / questions.length) * 100}%` }]} />
+              </View>
             </View>
-            <Text style={styles.questionNum}>Soal {currentQ + 1} dari {questions.length}</Text>
-            <Text style={styles.questionText}>{question.question}</Text>
+
+            <View style={styles.questionCard}>
+              <Text style={styles.questionText}>{question.question}</Text>
+            </View>
 
             {question.options.map((opt, idx) => {
               const isSelected = selectedAnswer === idx;
               const isCorrect = idx === question.correctAnswer;
               let optStyle = {};
+              let letterStyle = {};
+              let letterTextStyle = {};
               if (showFeedback) {
-                if (isCorrect) optStyle = styles.optionCorrect;
-                else if (isSelected && !isCorrect) optStyle = styles.optionWrong;
+                if (isCorrect) {
+                  optStyle = styles.optionCorrect;
+                  letterStyle = styles.optionLetterCorrect;
+                  letterTextStyle = styles.optionLetterTextActive;
+                } else if (isSelected && !isCorrect) {
+                  optStyle = styles.optionWrong;
+                  letterStyle = styles.optionLetterWrong;
+                  letterTextStyle = styles.optionLetterTextActive;
+                }
               }
 
               return (
@@ -380,20 +519,21 @@ export default function QuizScreen() {
                   onPress={() => handleSelectAnswer(idx)}
                   disabled={showFeedback}
                 >
-                  <View style={[styles.optionLetter, showFeedback && isCorrect && { backgroundColor: "#2D6A4F" }, showFeedback && isSelected && !isCorrect && { backgroundColor: "#C0272D" }]}>
-                    <Text style={[styles.optionLetterText, showFeedback && (isCorrect || (isSelected && !isCorrect)) && { color: "#fff" }]}>
+                  <View style={[styles.optionLetter, letterStyle]}>
+                    <Text style={[styles.optionLetterText, letterTextStyle]}>
                       {String.fromCharCode(65 + idx)}
                     </Text>
                   </View>
                   <Text style={styles.optionText}>{opt}</Text>
-                  {showFeedback && isCorrect && <Ionicons name="checkmark-circle" size={20} color="#2D6A4F" />}
-                  {showFeedback && isSelected && !isCorrect && <Ionicons name="close-circle" size={20} color="#C0272D" />}
+                  {showFeedback && isCorrect && <Ionicons name="checkmark-circle" size={22} color="#059669" />}
+                  {showFeedback && isSelected && !isCorrect && <Ionicons name="close-circle" size={22} color="#C0272D" />}
                 </Pressable>
               );
             })}
 
             {showFeedback && question.explanation && (
               <View style={styles.explanationBox}>
+                <Text style={styles.explanationLabel}>PENJELASAN</Text>
                 <Text style={styles.explanationText}>{question.explanation}</Text>
               </View>
             )}
@@ -414,34 +554,47 @@ export default function QuizScreen() {
 
         {phase === "result" && quizResult && (
           <>
-            <View style={styles.resultCard}>
-              <Ionicons
-                name={quizResult.passed ? "trophy" : "refresh-circle"}
-                size={56}
-                color={quizResult.passed ? "#C9A882" : colors.primary}
-                style={styles.resultIcon}
-              />
+            <View style={styles.resultHeaderBox}>
+              <View style={[styles.resultIconBg, { backgroundColor: quizResult.passed ? "#ECFDF5" : "#FFF0F0" }]}>
+                <Ionicons
+                  name={quizResult.passed ? "trophy" : "refresh-circle"}
+                  size={48}
+                  color={quizResult.passed ? "#059669" : colors.primary}
+                />
+              </View>
               <Text style={styles.resultTitle}>
-                {quizResult.passed ? "Lulus!" : "Belum Lulus"}
+                {quizResult.passed ? "Selamat!" : "Hampir!"}
               </Text>
               <Text style={styles.resultScore}>{quizResult.score}/{quizResult.total}</Text>
+              <Text style={styles.resultScoreLabel}>Jawaban Benar</Text>
               <Text style={styles.resultSub}>
-                {quizResult.passed ? "Kamu berhasil menyelesaikan kuis ini" : "Coba lagi untuk mendapat skor lebih tinggi"}
+                {quizResult.passed
+                  ? "Kamu berhasil lulus kuis ini"
+                  : "Pelajari lagi dan coba lebih baik"}
               </Text>
-              <View style={styles.resultRow}>
-                <View style={styles.resultStat}>
-                  <Text style={styles.resultStatVal}>+{quizResult.xpEarned}</Text>
-                  <Text style={styles.resultStatLabel}>XP</Text>
-                </View>
-                <View style={styles.resultStat}>
-                  <Text style={styles.resultStatVal}>{Math.round((quizResult.score / quizResult.total) * 100)}%</Text>
-                  <Text style={styles.resultStatLabel}>Skor</Text>
-                </View>
+            </View>
+
+            <View style={styles.resultStatsRow}>
+              <View style={styles.resultStatCard}>
+                <Text style={[styles.resultStatVal, { color: "#D97706" }]}>+{quizResult.xpEarned}</Text>
+                <Text style={styles.resultStatLabel}>XP Didapat</Text>
+              </View>
+              <View style={styles.resultStatCard}>
+                <Text style={[styles.resultStatVal, { color: quizResult.passed ? "#059669" : colors.primary }]}>
+                  {Math.round((quizResult.score / quizResult.total) * 100)}%
+                </Text>
+                <Text style={styles.resultStatLabel}>Skor</Text>
+              </View>
+              <View style={styles.resultStatCard}>
+                <Text style={[styles.resultStatVal, { color: quizResult.passed ? "#059669" : colors.primary }]}>
+                  {quizResult.passed ? "Lulus" : "Coba Lagi"}
+                </Text>
+                <Text style={styles.resultStatLabel}>Status</Text>
               </View>
             </View>
 
             <Pressable style={styles.doneBtn} onPress={() => router.back()}>
-              <Text style={styles.doneBtnText}>Kembali</Text>
+              <Text style={styles.doneBtnText}>Kembali ke Kuis</Text>
             </Pressable>
           </>
         )}
