@@ -1,7 +1,5 @@
-import { Platform } from "react-native";
-
 const DEV_DOMAIN = process.env.EXPO_PUBLIC_DOMAIN || "";
-const API_PREFIX = Platform.OS === "web" ? "/api-server/api" : `https://${DEV_DOMAIN}/api-server/api`;
+const API_PREFIX = `https://${DEV_DOMAIN}/api`;
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_PREFIX}${path}`;
