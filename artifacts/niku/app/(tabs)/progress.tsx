@@ -1,4 +1,5 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
+import type { ComponentProps } from "react";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import React from "react";
@@ -30,7 +31,9 @@ const CATEGORY_COLORS: Record<string, string> = {
   kanji: "#7C3AED",
 };
 
-const BADGE_ICONS: Record<string, string> = {
+type IoniconName = ComponentProps<typeof Ionicons>["name"];
+
+const BADGE_ICONS: Record<string, IoniconName> = {
   star: "star",
   flame: "flame",
   trophy: "trophy",
@@ -358,7 +361,7 @@ export default function ProgressScreen() {
                     ]}
                   >
                     <Ionicons
-                      name={(BADGE_ICONS[badge.iconName] as any) ?? "star"}
+                      name={BADGE_ICONS[badge.iconName] ?? "star"}
                       size={24}
                       color={earned ? colors.tan : colors.mutedForeground}
                     />

@@ -13,7 +13,7 @@ import {
 import Animated, { FadeIn, FadeInDown, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppContext } from "@/context/AppContext";
-import { LESSONS, QuizQuestion } from "@/data/seed";
+import { QuizQuestion } from "@/data/seed";
 import { useColors } from "@/hooks/useColors";
 
 type Phase = "lesson" | "quiz" | "result";
@@ -110,9 +110,9 @@ export default function QuizScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { completeQuiz } = useAppContext();
+  const { completeQuiz, lessons } = useAppContext();
 
-  const lesson = useMemo(() => LESSONS.find((l) => l.id === id), [id]);
+  const lesson = useMemo(() => lessons.find((l) => l.id === id), [id, lessons]);
   const [phase, setPhase] = useState<Phase>("lesson");
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -472,6 +472,26 @@ export default function QuizScreen() {
     return (
       <View style={[styles.container, { alignItems: "center", justifyContent: "center" }]}>
         <Text style={{ color: colors.foreground }}>Materi tidak ditemukan</Text>
+      </View>
+    );
+  }
+
+  if (lesson.locked) {
+    return (
+      <View style={[styles.container, { alignItems: "center", justifyContent: "center", gap: 16, paddingHorizontal: 32 }]}>
+        <Ionicons name="lock-closed" size={48} color={colors.mutedForeground} />
+        <Text style={{ fontSize: 18, fontWeight: "700" as const, color: colors.foreground, textAlign: "center" }}>
+          Materi Terkunci
+        </Text>
+        <Text style={{ fontSize: 14, color: colors.mutedForeground, textAlign: "center" }}>
+          Selesaikan kuis sebelumnya untuk membuka materi ini.
+        </Text>
+        <Pressable
+          onPress={() => router.back()}
+          style={{ backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 14 }}
+        >
+          <Text style={{ color: "#FFFFFF", fontWeight: "700" as const }}>Kembali</Text>
+        </Pressable>
       </View>
     );
   }

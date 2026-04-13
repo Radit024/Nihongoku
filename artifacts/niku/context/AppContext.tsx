@@ -154,6 +154,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (badge.requirement.type === "streak" && state.streak >= badge.requirement.value) {
           newBadges.push(badge.id);
         }
+        if (badge.requirement.type === "lessons" && passedCount >= badge.requirement.value) {
+          newBadges.push(badge.id);
+        }
       });
 
       const today = new Date().getDay();
