@@ -25,10 +25,10 @@ const CATEGORIES = [
 export default function BerandaScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { user, totalXP, streak, lessons, notifications, getCompletedCount } = useAppContext();
+  const { user, totalXP, streak, lessons, lessonProgress, notifications, getCompletedCount } = useAppContext();
 
   const firstName = user.name.split(" ")[0] || "Gakusei";
-  const unfinishedLesson = lessons.find((l) => !l.locked && !l.locked);
+  const unfinishedLesson = lessons.find((l) => !l.locked && !lessonProgress[l.id]?.quizPassed);
   const completedCount = getCompletedCount();
 
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);

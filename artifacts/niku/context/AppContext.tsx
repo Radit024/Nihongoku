@@ -22,6 +22,7 @@ interface AppState {
   user: UserState;
   totalXP: number;
   streak: number;
+  lastActiveDate: string | null;
   weeklyActive: boolean[];
   lessonProgress: Record<string, LessonProgress>;
   unlockedLessonIds: string[];
@@ -54,11 +55,28 @@ const defaultState: AppState = {
   user: defaultUser,
   totalXP: 0,
   streak: 0,
+  lastActiveDate: null,
   weeklyActive: defaultWeekly,
   lessonProgress: {},
   unlockedLessonIds: LESSONS.filter((l) => !l.locked).map((l) => l.id),
   earnedBadgeIds: [],
 };
+
+function getTodayISO(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function calcStreak(prevStreak: number, lastActiveDate: string | null): number {
+  const today = getTodayISO();
+  if (lastActiveDate === today) return prevStreak;
+  if (lastActiveDate === null) return 1;
+  const last = new Date(lastActiveDate);
+  const now = new Date(today);
+  const diffDays = Math.round((now.getTime() - last.getTime()) / 86400000);
+  if (diffDays === 1) return prevStreak + 1;
+  if (diffDays > 1) return 1;
+  return prevStreak;
+}
 
 const AppContext = createContext<AppContextType | null>(null);
 
@@ -94,17 +112,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(
     (name: string, email: string) => {
-      const today = new Date().getDay();
-      const dayIndex = today === 0 ? 6 : today - 1;
+      const today = getTodayISO();
+      const dayOfWeek = new Date().getDay();
+      const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       const newWeekly = [...(state.weeklyActive ?? defaultWeekly)] as boolean[];
       newWeekly[dayIndex] = true;
 
-      const newStreak = state.streak === 0 ? 1 : state.streak;
+      const newStreak = calcStreak(state.streak, state.lastActiveDate);
       const newState: AppState = {
         ...state,
         user: { isLoggedIn: true, name, email },
         weeklyActive: newWeekly,
         streak: newStreak,
+        lastActiveDate: today,
       };
       setState(newState);
       saveState(newState);
@@ -159,16 +179,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
       });
 
-      const today = new Date().getDay();
-      const dayIndex = today === 0 ? 6 : today - 1;
+      const today = getTodayISO();
+      const dayOfWeek = new Date().getDay();
+      const dayIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       const newWeekly = [...state.weeklyActive] as boolean[];
       newWeekly[dayIndex] = true;
 
-      const newStreak = Math.max(state.streak, 1);
+      const newStreak = calcStreak(state.streak, state.lastActiveDate);
 
       const newState: AppState = {
         ...state,
         totalXP: newTotalXP,
+        lastActiveDate: today,
         lessonProgress: newLessonProgress,
         unlockedLessonIds: newUnlocked,
         earnedBadgeIds: newBadges,
