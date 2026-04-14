@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   Platform,
@@ -13,7 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppContext } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
-import { useLocalSearchParams, router } from "expo-router";
+import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
 import { ApiMaterial } from "@/lib/api";
 import { fonts } from "@/constants/fonts";
 
@@ -38,10 +38,12 @@ export default function MateriScreen() {
   const [selectedCategory, setSelectedCategory] = useState(params.filter || "Semua");
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    refreshMaterials();
-    if (!isDosen) refreshQuizHistory();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      refreshMaterials();
+      if (!isDosen) refreshQuizHistory();
+    }, [isDosen])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useState } from "react";
 import {
   FlatList,
   Platform,
@@ -31,10 +31,12 @@ export default function KuisScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    refreshMaterials();
-    refreshQuizHistory();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      refreshMaterials();
+      refreshQuizHistory();
+    }, [])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
