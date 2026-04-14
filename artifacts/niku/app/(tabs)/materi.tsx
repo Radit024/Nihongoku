@@ -42,7 +42,7 @@ export default function MateriScreen() {
     useCallback(() => {
       refreshMaterials();
       if (!isDosen) refreshQuizHistory();
-    }, [isDosen])
+    }, [isDosen, refreshMaterials, refreshQuizHistory])
   );
 
   const onRefresh = async () => {

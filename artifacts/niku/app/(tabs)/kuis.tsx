@@ -35,7 +35,7 @@ export default function KuisScreen() {
     useCallback(() => {
       refreshMaterials();
       refreshQuizHistory();
-    }, [])
+    }, [refreshMaterials, refreshQuizHistory])
   );
 
   const onRefresh = async () => {
