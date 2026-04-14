@@ -24,12 +24,14 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function ProgressScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { user, progressData, refreshProgress, getLevelInfo, logout } = useAppContext();
+  const { user, materials, progressData, refreshProgress, refreshMaterials, getLevelInfo, logout } = useAppContext();
 
   useEffect(() => {
     refreshProgress();
+    refreshMaterials();
   }, []);
 
+  const isDosen = user?.role === "dosen";
   const xp = progressData?.user.xp ?? user?.xp ?? 0;
   const streak = progressData?.user.streak ?? user?.streak ?? 0;
   const levelInfo = getLevelInfo();
@@ -39,6 +41,14 @@ export default function ProgressScreen() {
   const xpInCurrentLevel = xp - levelInfo.xpStart;
   const xpNeeded = levelInfo.xpEnd - levelInfo.xpStart;
   const xpPct = xpNeeded > 0 ? Math.min(100, Math.round((xpInCurrentLevel / xpNeeded) * 100)) : 100;
+
+  const myMaterials = materials.filter(m => m.createdById === user?.id);
+  const totalSoal = myMaterials.reduce((sum, m) => sum + m.questionCount, 0);
+
+  const dosenCategoryCounts: Record<string, number> = {};
+  myMaterials.forEach(m => {
+    dosenCategoryCounts[m.category] = (dosenCategoryCounts[m.category] || 0) + 1;
+  });
 
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
 
@@ -233,6 +243,123 @@ export default function ProgressScreen() {
     },
   });
 
+  const renderDosenBody = () => (
+    <View style={styles.body}>
+      <View style={styles.statsGrid}>
+        <View style={styles.statCard}>
+          <View style={[styles.statIcon, { backgroundColor: "#FFF0F0" }]}>
+            <Ionicons name="document-text" size={18} color="#C0272D" />
+          </View>
+          <Text style={styles.statVal}>{myMaterials.length}</Text>
+          <Text style={styles.statLabel}>Materi Saya</Text>
+        </View>
+        <View style={styles.statCard}>
+          <View style={[styles.statIcon, { backgroundColor: "#EFF6FF" }]}>
+            <Ionicons name="help-circle" size={18} color="#2563EB" />
+          </View>
+          <Text style={styles.statVal}>{totalSoal}</Text>
+          <Text style={styles.statLabel}>Soal Dibuat</Text>
+        </View>
+        <View style={styles.statCard}>
+          <View style={[styles.statIcon, { backgroundColor: "#ECFDF5" }]}>
+            <Ionicons name="library" size={18} color="#059669" />
+          </View>
+          <Text style={styles.statVal}>{materials.length}</Text>
+          <Text style={styles.statLabel}>Total Materi</Text>
+        </View>
+      </View>
+
+      <Text style={styles.sectionTitle}>Materi per Kategori</Text>
+      {Object.keys(dosenCategoryCounts).length > 0 ? (
+        Object.entries(dosenCategoryCounts).map(([category, count]) => {
+          const color = CATEGORY_COLORS[category] || colors.primary;
+          const pct = myMaterials.length > 0 ? Math.round((count / myMaterials.length) * 100) : 0;
+          return (
+            <View key={category} style={styles.catCard}>
+              <View style={styles.catRow}>
+                <View style={styles.catLeft}>
+                  <View style={[styles.catDot, { backgroundColor: color }]} />
+                  <Text style={styles.catName}>{category}</Text>
+                </View>
+                <View style={{ alignItems: "flex-end" as const }}>
+                  <Text style={styles.catCount}>{count} materi</Text>
+                  <Text style={styles.catPct}>{pct}%</Text>
+                </View>
+              </View>
+              <View style={styles.barBg}>
+                <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: color }]} />
+              </View>
+            </View>
+          );
+        })
+      ) : (
+        <Text style={styles.emptyText}>Belum ada materi yang diunggah</Text>
+      )}
+    </View>
+  );
+
+  const renderMahasiswaBody = () => (
+    <View style={styles.body}>
+      <View style={styles.statsGrid}>
+        <View style={styles.statCard}>
+          <View style={[styles.statIcon, { backgroundColor: "#FFF0F0" }]}>
+            <Ionicons name="flash" size={18} color="#C0272D" />
+          </View>
+          <Text style={styles.statVal}>{xp}</Text>
+          <Text style={styles.statLabel}>Total XP</Text>
+        </View>
+        <View style={styles.statCard}>
+          <View style={[styles.statIcon, { backgroundColor: "#FFF7ED" }]}>
+            <Ionicons name="flame" size={18} color="#D97706" />
+          </View>
+          <Text style={styles.statVal}>{streak}</Text>
+          <Text style={styles.statLabel}>Streak</Text>
+        </View>
+        <View style={styles.statCard}>
+          <View style={[styles.statIcon, { backgroundColor: "#ECFDF5" }]}>
+            <Ionicons name="trophy" size={18} color="#059669" />
+          </View>
+          <Text style={styles.statVal}>{progressData?.passedQuizzes ?? 0}</Text>
+          <Text style={styles.statLabel}>Kuis Lulus</Text>
+        </View>
+        <View style={styles.statCard}>
+          <View style={[styles.statIcon, { backgroundColor: "#EFF6FF" }]}>
+            <Ionicons name="document-text" size={18} color="#2563EB" />
+          </View>
+          <Text style={styles.statVal}>{progressData?.totalQuizzes ?? 0}</Text>
+          <Text style={styles.statLabel}>Total Kuis</Text>
+        </View>
+      </View>
+
+      <Text style={styles.sectionTitle}>Progress Kategori</Text>
+      {categoryProgress.length > 0 ? (
+        categoryProgress.map((cp) => {
+          const pct = cp.total > 0 ? Math.round((cp.completed / cp.total) * 100) : 0;
+          const color = CATEGORY_COLORS[cp.category] || colors.primary;
+          return (
+            <View key={cp.category} style={styles.catCard}>
+              <View style={styles.catRow}>
+                <View style={styles.catLeft}>
+                  <View style={[styles.catDot, { backgroundColor: color }]} />
+                  <Text style={styles.catName}>{cp.category}</Text>
+                </View>
+                <View style={{ alignItems: "flex-end" as const }}>
+                  <Text style={styles.catCount}>{cp.completed}/{cp.total}</Text>
+                  <Text style={styles.catPct}>{pct}%</Text>
+                </View>
+              </View>
+              <View style={styles.barBg}>
+                <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: color }]} />
+              </View>
+            </View>
+          );
+        })
+      ) : (
+        <Text style={styles.emptyText}>Belum ada data progress</Text>
+      )}
+    </View>
+  );
+
   return (
     <FlatList
       data={[]}
@@ -249,7 +376,7 @@ export default function ProgressScreen() {
                 <View style={styles.profileInfo}>
                   <Text style={styles.profileName}>{user?.name}</Text>
                   <Text style={styles.profileSub}>
-                    {user?.role === "dosen" ? "Dosen" : "Mahasiswa"} · Lv.{levelInfo.level} {levelInfo.title}
+                    {isDosen ? "Dosen" : `Mahasiswa · Lv.${levelInfo.level} ${levelInfo.title}`}
                   </Text>
                 </View>
               </View>
@@ -258,76 +385,20 @@ export default function ProgressScreen() {
               </Pressable>
             </View>
 
-            <View style={styles.xpSection}>
-              <View style={styles.xpLabelRow}>
-                <Text style={styles.xpLabel}>Progress ke Lv.{levelInfo.level + 1}</Text>
-                <Text style={styles.xpVal}>{xp} XP · {xpPct}%</Text>
-              </View>
-              <View style={styles.xpBar}>
-                <View style={[styles.xpFill, { width: `${xpPct}%` }]} />
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.body}>
-            <View style={styles.statsGrid}>
-              <View style={styles.statCard}>
-                <View style={[styles.statIcon, { backgroundColor: "#FFF0F0" }]}>
-                  <Ionicons name="flash" size={18} color="#C0272D" />
+            {!isDosen && (
+              <View style={styles.xpSection}>
+                <View style={styles.xpLabelRow}>
+                  <Text style={styles.xpLabel}>Progress ke Lv.{levelInfo.level + 1}</Text>
+                  <Text style={styles.xpVal}>{xp} XP · {xpPct}%</Text>
                 </View>
-                <Text style={styles.statVal}>{xp}</Text>
-                <Text style={styles.statLabel}>Total XP</Text>
-              </View>
-              <View style={styles.statCard}>
-                <View style={[styles.statIcon, { backgroundColor: "#FFF7ED" }]}>
-                  <Ionicons name="flame" size={18} color="#D97706" />
+                <View style={styles.xpBar}>
+                  <View style={[styles.xpFill, { width: `${xpPct}%` }]} />
                 </View>
-                <Text style={styles.statVal}>{streak}</Text>
-                <Text style={styles.statLabel}>Streak</Text>
               </View>
-              <View style={styles.statCard}>
-                <View style={[styles.statIcon, { backgroundColor: "#ECFDF5" }]}>
-                  <Ionicons name="trophy" size={18} color="#059669" />
-                </View>
-                <Text style={styles.statVal}>{progressData?.passedQuizzes ?? 0}</Text>
-                <Text style={styles.statLabel}>Kuis Lulus</Text>
-              </View>
-              <View style={styles.statCard}>
-                <View style={[styles.statIcon, { backgroundColor: "#EFF6FF" }]}>
-                  <Ionicons name="document-text" size={18} color="#2563EB" />
-                </View>
-                <Text style={styles.statVal}>{progressData?.totalQuizzes ?? 0}</Text>
-                <Text style={styles.statLabel}>Total Kuis</Text>
-              </View>
-            </View>
-
-            <Text style={styles.sectionTitle}>Progress Kategori</Text>
-            {categoryProgress.length > 0 ? (
-              categoryProgress.map((cp) => {
-                const pct = cp.total > 0 ? Math.round((cp.completed / cp.total) * 100) : 0;
-                const color = CATEGORY_COLORS[cp.category] || colors.primary;
-                return (
-                  <View key={cp.category} style={styles.catCard}>
-                    <View style={styles.catRow}>
-                      <View style={styles.catLeft}>
-                        <View style={[styles.catDot, { backgroundColor: color }]} />
-                        <Text style={styles.catName}>{cp.category}</Text>
-                      </View>
-                      <View style={{ alignItems: "flex-end" }}>
-                        <Text style={styles.catCount}>{cp.completed}/{cp.total}</Text>
-                        <Text style={styles.catPct}>{pct}%</Text>
-                      </View>
-                    </View>
-                    <View style={styles.barBg}>
-                      <View style={[styles.barFill, { width: `${pct}%`, backgroundColor: color }]} />
-                    </View>
-                  </View>
-                );
-              })
-            ) : (
-              <Text style={styles.emptyText}>Belum ada data progress</Text>
             )}
           </View>
+
+          {isDosen ? renderDosenBody() : renderMahasiswaBody()}
         </>
       }
     />

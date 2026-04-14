@@ -42,6 +42,9 @@ export default function BerandaScreen() {
   const xpNeeded = levelInfo.xpEnd - levelInfo.xpStart;
   const xpPct = xpNeeded > 0 ? Math.min(100, Math.round((xpInCurrentLevel / xpNeeded) * 100)) : 100;
 
+  const myMaterials = materials.filter(m => m.createdById === user?.id);
+  const totalSoal = myMaterials.reduce((sum, m) => sum + m.questionCount, 0);
+
   const categoryCounts: Record<string, number> = {};
   materials.forEach(m => {
     categoryCounts[m.category] = (categoryCounts[m.category] || 0) + 1;
@@ -257,6 +260,75 @@ export default function BerandaScreen() {
     },
   });
 
+  const renderDosenHeader = () => (
+    <View style={styles.header}>
+      <View style={styles.greetRow}>
+        <View>
+          <Text style={styles.greeting}>Konnichiwa, Sensei</Text>
+          <Text style={styles.headerName}>{firstName}</Text>
+        </View>
+        <View style={styles.roleBadge}>
+          <Text style={styles.roleBadgeText}>Dosen</Text>
+        </View>
+      </View>
+
+      <View style={styles.statsRow}>
+        <View style={styles.statCard}>
+          <Text style={styles.statVal}>{myMaterials.length}</Text>
+          <Text style={styles.statLabel}>Materi</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statVal}>{totalSoal}</Text>
+          <Text style={styles.statLabel}>Soal Dibuat</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statVal}>{materials.length}</Text>
+          <Text style={styles.statLabel}>Total Materi</Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderMahasiswaHeader = () => (
+    <View style={styles.header}>
+      <View style={styles.greetRow}>
+        <View>
+          <Text style={styles.greeting}>Konnichiwa,</Text>
+          <Text style={styles.headerName}>{firstName}</Text>
+        </View>
+        <View style={styles.streakBadge}>
+          <Ionicons name="flame" size={16} color="#FCD34D" />
+          <Text style={styles.streakText}>{streak}</Text>
+        </View>
+      </View>
+
+      <View style={styles.xpRow}>
+        <View style={styles.xpLabelRow}>
+          <Text style={styles.xpLabel}>Lv.{levelInfo.level} {levelInfo.title}</Text>
+          <Text style={styles.xpVal}>{xp} XP</Text>
+        </View>
+        <View style={styles.xpBar}>
+          <View style={[styles.xpFill, { width: `${xpPct}%` }]} />
+        </View>
+      </View>
+
+      <View style={styles.statsRow}>
+        <View style={styles.statCard}>
+          <Text style={styles.statVal}>{xp}</Text>
+          <Text style={styles.statLabel}>Total XP</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statVal}>{materials.length}</Text>
+          <Text style={styles.statLabel}>Materi</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statVal}>{progressData?.passedQuizzes ?? 0}</Text>
+          <Text style={styles.statLabel}>Lulus</Text>
+        </View>
+      </View>
+    </View>
+  );
+
   return (
     <FlatList
       data={[]}
@@ -264,49 +336,7 @@ export default function BerandaScreen() {
       style={styles.container}
       ListHeaderComponent={
         <>
-          <View style={styles.header}>
-            <View style={styles.greetRow}>
-              <View>
-                <Text style={styles.greeting}>Konnichiwa,</Text>
-                <Text style={styles.headerName}>{firstName}</Text>
-              </View>
-              <View style={styles.streakBadge}>
-                <Ionicons name="flame" size={16} color="#FCD34D" />
-                <Text style={styles.streakText}>{streak}</Text>
-              </View>
-            </View>
-
-            {isDosen && (
-              <View style={styles.roleBadge}>
-                <Text style={styles.roleBadgeText}>Dosen</Text>
-              </View>
-            )}
-
-            <View style={styles.xpRow}>
-              <View style={styles.xpLabelRow}>
-                <Text style={styles.xpLabel}>Lv.{levelInfo.level} {levelInfo.title}</Text>
-                <Text style={styles.xpVal}>{xp} XP</Text>
-              </View>
-              <View style={styles.xpBar}>
-                <View style={[styles.xpFill, { width: `${xpPct}%` }]} />
-              </View>
-            </View>
-
-            <View style={styles.statsRow}>
-              <View style={styles.statCard}>
-                <Text style={styles.statVal}>{xp}</Text>
-                <Text style={styles.statLabel}>Total XP</Text>
-              </View>
-              <View style={styles.statCard}>
-                <Text style={styles.statVal}>{materials.length}</Text>
-                <Text style={styles.statLabel}>Materi</Text>
-              </View>
-              <View style={styles.statCard}>
-                <Text style={styles.statVal}>{progressData?.passedQuizzes ?? 0}</Text>
-                <Text style={styles.statLabel}>Lulus</Text>
-              </View>
-            </View>
-          </View>
+          {isDosen ? renderDosenHeader() : renderMahasiswaHeader()}
 
           <View style={styles.body}>
             <Text style={styles.sectionTitle}>Kategori Materi</Text>

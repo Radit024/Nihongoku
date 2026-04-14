@@ -80,6 +80,7 @@ export default function TabLayout() {
         name="kuis"
         options={{
           title: "Kuis",
+          href: isDosen ? null : undefined,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? "help-circle" : "help-circle-outline"} size={24} color={color} />
           ),

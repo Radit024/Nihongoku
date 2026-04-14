@@ -7,10 +7,10 @@ Japanese language learning EdTech mobile app built with Expo (React Native). Fea
 - **Mobile App**: Expo SDK 54 / React Native 0.81 via Expo Router v6
 - **API Server**: Express 5 + Drizzle ORM + PostgreSQL
 - **AI**: Gemini 2.5 Flash via Replit AI Integrations (content extraction + quiz generation)
-- **Routing**: File-based routing with Expo Router; 5 tabs (Beranda, Materi, Upload, Kuis, Progress) + quiz stack
+- **Routing**: File-based routing with Expo Router; role-based tabs + quiz stack
 - **State**: React Context + AsyncStorage for auth caching; API-driven data
 - **Auth**: Email/password with bcryptjs hashing; role-based (dosen/mahasiswa)
-- **Fonts**: Inter (body) via @expo-google-fonts/inter; Georgia/serif (headings)
+- **Fonts**: Nunito (all UI) via @expo-google-fonts/nunito; 400/600/700/800/900 weights
 
 ## User Flow
 1. Dosen uploads PDF/image material via Upload tab
@@ -55,8 +55,8 @@ Japanese language learning EdTech mobile app built with Expo (React Native). Fea
 - **Navy**: #1C2340
 - **Tan (Accent)**: #C9A882
 - **Radius scale**: sm(8), md(12), lg(16), xl(20), xxl(24), full(9999)
-- **Headings**: Georgia (iOS) / serif (Android/Web)
-- **Body**: Inter
+- **Font**: Nunito (all weights via @expo-google-fonts/nunito)
+- **Category Colors**: Tata Bahasa=#C0272D, Kosakata=#059669, Kanji=#7C3AED, Percakapan=#2563EB, Budaya=#D97706
 
 ## API Endpoints
 - POST /api/auth/register — Register with name, email, password, role
@@ -71,12 +71,13 @@ Japanese language learning EdTech mobile app built with Expo (React Native). Fea
 
 ## Features
 - Role-based auth: Dosen uploads materials, Mahasiswa takes quizzes
+- Role-based UI: Dosen sees teaching stats (materi, soal dibuat); Mahasiswa sees gamification (XP, streak, level)
+- Role-based tab bar: Dosen gets Beranda/Materi/Upload/Profil; Mahasiswa gets Beranda/Materi/Kuis/Profil
 - AI-powered content processing: Gemini reads PDF/images, generates quizzes
 - XP system: 10 XP per correct answer + 20 XP bonus for passing (>=80%)
 - Streak tracking with daily active date logic
 - Category-based progress tracking
 - Search & filter on Materi screen
-- Upload tab visible only to Dosen users
 - Quiz: 3 phases — lesson content → interactive quiz (green/red feedback) → results
 
 ## Level System

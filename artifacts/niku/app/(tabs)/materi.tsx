@@ -29,15 +29,16 @@ const CATEGORY_META: Record<string, { color: string; icon: React.ComponentProps<
 export default function MateriScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { materials, refreshMaterials, quizHistory, refreshQuizHistory } = useAppContext();
+  const { user, materials, refreshMaterials, quizHistory, refreshQuizHistory } = useAppContext();
   const params = useLocalSearchParams<{ filter?: string }>();
+  const isDosen = user?.role === "dosen";
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(params.filter || "Semua");
 
   useEffect(() => {
     refreshMaterials();
-    refreshQuizHistory();
+    if (!isDosen) refreshQuizHistory();
   }, []);
 
   useEffect(() => {
@@ -192,6 +193,12 @@ export default function MateriScreen() {
       fontFamily: fonts.semiBold,
       color: colors.mutedForeground,
     },
+    dosenTag: {
+      fontSize: 11,
+      fontFamily: fonts.semiBold,
+      color: colors.mutedForeground,
+      marginTop: 4,
+    },
     emptyBox: {
       alignItems: "center",
       marginTop: 48,
@@ -208,11 +215,18 @@ export default function MateriScreen() {
   const renderMaterial = ({ item }: { item: ApiMaterial }) => {
     const isPassed = passedMaterials.has(item.id);
     const meta = CATEGORY_META[item.category] || { color: colors.primary, icon: "document-outline" as const };
+    const isMyMaterial = item.createdById === user?.id;
 
     return (
       <Pressable
         style={styles.card}
-        onPress={() => router.push(`/quiz/${item.id}`)}
+        onPress={() => {
+          if (isDosen) {
+            router.push("/(tabs)/upload");
+          } else {
+            router.push(`/quiz/${item.id}`);
+          }
+        }}
       >
         <View style={[styles.cardIcon, { backgroundColor: meta.color + "18" }]}>
           <Ionicons name={meta.icon} size={22} color={meta.color} />
@@ -220,10 +234,16 @@ export default function MateriScreen() {
         <View style={styles.cardBody}>
           <View style={styles.cardRow}>
             <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
-            {isPassed && (
+            {!isDosen && isPassed && (
               <View style={[styles.statusBadge, { backgroundColor: "#ECFDF5" }]}>
                 <Ionicons name="checkmark-circle" size={12} color="#059669" />
                 <Text style={[styles.statusText, { color: "#059669" }]}>Lulus</Text>
+              </View>
+            )}
+            {isDosen && isMyMaterial && (
+              <View style={[styles.statusBadge, { backgroundColor: "#EFF6FF" }]}>
+                <Ionicons name="person" size={12} color="#2563EB" />
+                <Text style={[styles.statusText, { color: "#2563EB" }]}>Milik Saya</Text>
               </View>
             )}
           </View>
