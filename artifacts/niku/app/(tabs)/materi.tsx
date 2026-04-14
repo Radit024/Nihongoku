@@ -193,12 +193,6 @@ export default function MateriScreen() {
       fontFamily: fonts.semiBold,
       color: colors.mutedForeground,
     },
-    dosenTag: {
-      fontSize: 11,
-      fontFamily: fonts.semiBold,
-      color: colors.mutedForeground,
-      marginTop: 4,
-    },
     emptyBox: {
       alignItems: "center",
       marginTop: 48,
