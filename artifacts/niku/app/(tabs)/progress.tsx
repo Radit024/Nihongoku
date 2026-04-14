@@ -1,11 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
+  Modal,
   Platform,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,12 +29,73 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function ProgressScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { user, materials, progressData, refreshProgress, refreshMaterials, getLevelInfo, logout } = useAppContext();
+  const { user, materials, progressData, refreshProgress, refreshMaterials, getLevelInfo, logout, updateProfile } = useAppContext();
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     refreshProgress();
     refreshMaterials();
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refreshProgress(), refreshMaterials()]);
+    setRefreshing(false);
+  };
+
+  const openEditModal = () => {
+    setEditName(user?.name || "");
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowEditModal(true);
+  };
+
+  const handleSaveProfile = async () => {
+    const nameChanged = editName.trim() && editName.trim() !== user?.name;
+    const passwordChanging = newPassword.length > 0;
+
+    if (!nameChanged && !passwordChanging) {
+      Alert.alert("Info", "Tidak ada perubahan");
+      return;
+    }
+
+    if (passwordChanging) {
+      if (!currentPassword) {
+        Alert.alert("Error", "Password lama wajib diisi");
+        return;
+      }
+      if (newPassword.length < 6) {
+        Alert.alert("Error", "Password baru minimal 6 karakter");
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        Alert.alert("Error", "Konfirmasi password tidak cocok");
+        return;
+      }
+    }
+
+    setEditLoading(true);
+    try {
+      await updateProfile({
+        ...(nameChanged ? { name: editName.trim() } : {}),
+        ...(passwordChanging ? { currentPassword, newPassword } : {}),
+      });
+      setShowEditModal(false);
+      Alert.alert("Berhasil", "Profil berhasil diperbarui");
+    } catch (err: any) {
+      Alert.alert("Gagal", err.message || "Terjadi kesalahan");
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
   const isDosen = user?.role === "dosen";
   const xp = progressData?.user.xp ?? user?.xp ?? 0;
@@ -241,6 +307,102 @@ export default function ProgressScreen() {
       fontSize: 14,
       marginTop: 20,
     },
+    editBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: "rgba(255,255,255,0.18)",
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    headerBtns: {
+      flexDirection: "row",
+      gap: 8,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      justifyContent: "center",
+      padding: 20,
+    },
+    modalContent: {
+      backgroundColor: colors.card,
+      borderRadius: 24,
+      padding: 24,
+      maxHeight: "80%",
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontFamily: fonts.extraBold,
+      color: colors.foreground,
+      marginBottom: 20,
+    },
+    inputLabel: {
+      fontSize: 13,
+      fontFamily: fonts.bold,
+      color: colors.foreground,
+      marginBottom: 6,
+      marginTop: 12,
+    },
+    input: {
+      backgroundColor: colors.background,
+      borderRadius: 14,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 15,
+      fontFamily: fonts.regular,
+      color: colors.foreground,
+    },
+    inputHint: {
+      fontSize: 11,
+      fontFamily: fonts.regular,
+      color: colors.mutedForeground,
+      marginTop: 4,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: colors.border,
+      marginVertical: 16,
+    },
+    passwordSectionTitle: {
+      fontSize: 14,
+      fontFamily: fonts.bold,
+      color: colors.foreground,
+      marginBottom: 4,
+    },
+    modalBtns: {
+      flexDirection: "row",
+      gap: 10,
+      marginTop: 20,
+    },
+    modalCancelBtn: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 14,
+      backgroundColor: colors.background,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      alignItems: "center",
+    },
+    modalCancelText: {
+      fontSize: 15,
+      fontFamily: fonts.bold,
+      color: colors.foreground,
+    },
+    modalSaveBtn: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 14,
+      backgroundColor: colors.primary,
+      alignItems: "center",
+    },
+    modalSaveText: {
+      fontSize: 15,
+      fontFamily: fonts.bold,
+      color: colors.primaryForeground,
+    },
   });
 
   const renderDosenBody = () => (
@@ -361,46 +523,121 @@ export default function ProgressScreen() {
   );
 
   return (
-    <FlatList
-      data={[]}
-      renderItem={() => null}
-      style={styles.container}
-      ListHeaderComponent={
-        <>
-          <View style={styles.header}>
-            <View style={styles.headerTopRow}>
-              <View style={styles.profileRow}>
-                <View style={styles.avatarCircle}>
-                  <Text style={styles.avatarText}>{initials}</Text>
+    <>
+      <FlatList
+        data={[]}
+        renderItem={() => null}
+        style={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
+        }
+        ListHeaderComponent={
+          <>
+            <View style={styles.header}>
+              <View style={styles.headerTopRow}>
+                <View style={styles.profileRow}>
+                  <View style={styles.avatarCircle}>
+                    <Text style={styles.avatarText}>{initials}</Text>
+                  </View>
+                  <View style={styles.profileInfo}>
+                    <Text style={styles.profileName}>{user?.name}</Text>
+                    <Text style={styles.profileSub}>
+                      {isDosen ? "Dosen" : `Mahasiswa · Lv.${levelInfo.level} ${levelInfo.title}`}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.profileInfo}>
-                  <Text style={styles.profileName}>{user?.name}</Text>
-                  <Text style={styles.profileSub}>
-                    {isDosen ? "Dosen" : `Mahasiswa · Lv.${levelInfo.level} ${levelInfo.title}`}
-                  </Text>
+                <View style={styles.headerBtns}>
+                  <Pressable style={styles.editBtn} onPress={openEditModal}>
+                    <Ionicons name="create-outline" size={20} color={colors.primaryForeground} />
+                  </Pressable>
+                  <Pressable style={styles.logoutBtn} onPress={logout}>
+                    <Ionicons name="log-out-outline" size={20} color={colors.primaryForeground} />
+                  </Pressable>
                 </View>
               </View>
-              <Pressable style={styles.logoutBtn} onPress={logout}>
-                <Ionicons name="log-out-outline" size={20} color={colors.primaryForeground} />
-              </Pressable>
+
+              {!isDosen && (
+                <View style={styles.xpSection}>
+                  <View style={styles.xpLabelRow}>
+                    <Text style={styles.xpLabel}>Progress ke Lv.{levelInfo.level + 1}</Text>
+                    <Text style={styles.xpVal}>{xp} XP · {xpPct}%</Text>
+                  </View>
+                  <View style={styles.xpBar}>
+                    <View style={[styles.xpFill, { width: `${xpPct}%` }]} />
+                  </View>
+                </View>
+              )}
             </View>
 
-            {!isDosen && (
-              <View style={styles.xpSection}>
-                <View style={styles.xpLabelRow}>
-                  <Text style={styles.xpLabel}>Progress ke Lv.{levelInfo.level + 1}</Text>
-                  <Text style={styles.xpVal}>{xp} XP · {xpPct}%</Text>
-                </View>
-                <View style={styles.xpBar}>
-                  <View style={[styles.xpFill, { width: `${xpPct}%` }]} />
-                </View>
-              </View>
-            )}
-          </View>
+            {isDosen ? renderDosenBody() : renderMahasiswaBody()}
+          </>
+        }
+      />
 
-          {isDosen ? renderDosenBody() : renderMahasiswaBody()}
-        </>
-      }
-    />
+      <Modal visible={showEditModal} transparent animationType="fade" onRequestClose={() => setShowEditModal(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setShowEditModal(false)}>
+          <Pressable style={styles.modalContent} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Edit Profil</Text>
+
+            <Text style={styles.inputLabel}>Nama</Text>
+            <TextInput
+              style={styles.input}
+              value={editName}
+              onChangeText={setEditName}
+              placeholder="Nama lengkap"
+              placeholderTextColor={colors.mutedForeground}
+            />
+
+            <View style={styles.divider} />
+
+            <Text style={styles.passwordSectionTitle}>Ganti Password</Text>
+            <Text style={styles.inputHint}>Kosongkan jika tidak ingin mengganti password</Text>
+
+            <Text style={styles.inputLabel}>Password Lama</Text>
+            <TextInput
+              style={styles.input}
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+              placeholder="Masukkan password lama"
+              placeholderTextColor={colors.mutedForeground}
+              secureTextEntry
+            />
+
+            <Text style={styles.inputLabel}>Password Baru</Text>
+            <TextInput
+              style={styles.input}
+              value={newPassword}
+              onChangeText={setNewPassword}
+              placeholder="Minimal 6 karakter"
+              placeholderTextColor={colors.mutedForeground}
+              secureTextEntry
+            />
+
+            <Text style={styles.inputLabel}>Konfirmasi Password Baru</Text>
+            <TextInput
+              style={styles.input}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="Ulangi password baru"
+              placeholderTextColor={colors.mutedForeground}
+              secureTextEntry
+            />
+
+            <View style={styles.modalBtns}>
+              <Pressable style={styles.modalCancelBtn} onPress={() => setShowEditModal(false)}>
+                <Text style={styles.modalCancelText}>Batal</Text>
+              </Pressable>
+              <Pressable style={[styles.modalSaveBtn, editLoading && { opacity: 0.7 }]} onPress={handleSaveProfile} disabled={editLoading}>
+                {editLoading ? (
+                  <ActivityIndicator color={colors.primaryForeground} size="small" />
+                ) : (
+                  <Text style={styles.modalSaveText}>Simpan</Text>
+                )}
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
   );
 }

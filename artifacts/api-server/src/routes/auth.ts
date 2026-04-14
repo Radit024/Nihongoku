@@ -98,4 +98,63 @@ router.post("/auth/login", async (req, res) => {
   }
 });
 
+router.patch("/auth/profile", async (req, res) => {
+  try {
+    const userId = req.headers["x-user-id"] as string;
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!user) {
+      res.status(404).json({ error: "User tidak ditemukan" });
+      return;
+    }
+
+    const { name, currentPassword, newPassword } = req.body;
+    const updates: Partial<{ name: string; passwordHash: string }> = {};
+
+    if (name && name.trim()) {
+      updates.name = name.trim();
+    }
+
+    if (newPassword) {
+      if (!currentPassword) {
+        res.status(400).json({ error: "Password lama wajib diisi untuk mengganti password" });
+        return;
+      }
+      const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!valid) {
+        res.status(400).json({ error: "Password lama salah" });
+        return;
+      }
+      if (newPassword.length < 6) {
+        res.status(400).json({ error: "Password baru minimal 6 karakter" });
+        return;
+      }
+      updates.passwordHash = await bcrypt.hash(newPassword, 10);
+    }
+
+    if (Object.keys(updates).length === 0) {
+      res.status(400).json({ error: "Tidak ada data yang diubah" });
+      return;
+    }
+
+    const [updated] = await db.update(usersTable).set(updates).where(eq(usersTable.id, userId)).returning();
+
+    res.json({
+      id: updated.id,
+      name: updated.name,
+      email: updated.email,
+      role: updated.role,
+      xp: updated.xp,
+      streak: updated.streak,
+    });
+  } catch (err) {
+    req.log.error(err, "Profile update error");
+    res.status(500).json({ error: "Terjadi kesalahan server" });
+  }
+});
+
 export default router;

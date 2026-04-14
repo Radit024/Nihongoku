@@ -145,4 +145,12 @@ export const api = {
   getProgress(userId: string): Promise<ProgressData> {
     return request("/progress", { headers: { "x-user-id": userId } });
   },
+
+  updateProfile(userId: string, data: { name?: string; currentPassword?: string; newPassword?: string }): Promise<ApiUser> {
+    return request("/auth/profile", {
+      method: "PATCH",
+      headers: { "x-user-id": userId },
+      body: JSON.stringify(data),
+    });
+  },
 };

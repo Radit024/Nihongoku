@@ -4,6 +4,7 @@ import {
   FlatList,
   Platform,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   TextInput,
@@ -35,11 +36,18 @@ export default function MateriScreen() {
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(params.filter || "Semua");
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     refreshMaterials();
     if (!isDosen) refreshQuizHistory();
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refreshMaterials(), ...(!isDosen ? [refreshQuizHistory()] : [])]);
+    setRefreshing(false);
+  };
 
   useEffect(() => {
     if (params.filter) setSelectedCategory(params.filter);
@@ -282,6 +290,9 @@ export default function MateriScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderMaterial}
         contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
+        }
         ListHeaderComponent={
           <FlatList
             data={ALL_CATEGORIES}

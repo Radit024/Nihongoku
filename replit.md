@@ -61,6 +61,7 @@ Japanese language learning EdTech mobile app built with Expo (React Native). Fea
 ## API Endpoints
 - POST /api/auth/register — Register with name, email, password, role
 - POST /api/auth/login — Login with email, password
+- PATCH /api/auth/profile — Update name and/or password (requires x-user-id header, currentPassword for password changes)
 - POST /api/materials/upload — Upload PDF/image (multipart, dosen only)
 - GET /api/materials — List all materials
 - GET /api/materials/:id — Get material with quiz questions
@@ -79,6 +80,8 @@ Japanese language learning EdTech mobile app built with Expo (React Native). Fea
 - Category-based progress tracking
 - Search & filter on Materi screen
 - Quiz: 3 phases — lesson content → interactive quiz (green/red feedback) → results
+- Profile editing: Name change + password update with current password verification
+- Pull-to-refresh on Profil, Materi, and Kuis screens
 
 ## Level System
 - Lv.1 Pemula: 0-99 XP

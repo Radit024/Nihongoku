@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   Platform,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   View,
@@ -28,10 +29,18 @@ export default function KuisScreen() {
   const insets = useSafeAreaInsets();
   const { materials, refreshMaterials, quizHistory, refreshQuizHistory } = useAppContext();
 
+  const [refreshing, setRefreshing] = useState(false);
+
   useEffect(() => {
     refreshMaterials();
     refreshQuizHistory();
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refreshMaterials(), refreshQuizHistory()]);
+    setRefreshing(false);
+  };
 
   const bestScores: Record<string, { score: number; total: number; passed: boolean }> = {};
   quizHistory.forEach(q => {
@@ -187,6 +196,9 @@ export default function KuisScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderQuiz}
         contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
+        }
         ListEmptyComponent={
           <View style={styles.emptyBox}>
             <Ionicons name="help-circle-outline" size={48} color={colors.mutedForeground} />

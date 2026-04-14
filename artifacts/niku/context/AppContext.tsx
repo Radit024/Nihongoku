@@ -13,6 +13,7 @@ export interface AppContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, role: string) => Promise<void>;
   logout: () => void;
+  updateProfile: (data: { name?: string; currentPassword?: string; newPassword?: string }) => Promise<void>;
   refreshMaterials: () => Promise<void>;
   refreshProgress: () => Promise<void>;
   refreshQuizHistory: () => Promise<void>;
@@ -109,6 +110,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
+  const updateProfile = useCallback(async (data: { name?: string; currentPassword?: string; newPassword?: string }) => {
+    if (!user) throw new Error("Not logged in");
+    const updated = await api.updateProfile(user.id, data);
+    setUser(updated);
+    await saveUser(updated);
+  }, [user]);
+
   const getLevelInfo = useCallback(() => {
     return getLevelFromXP(user?.xp ?? 0);
   }, [user?.xp]);
@@ -124,6 +132,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         logout,
+        updateProfile,
         refreshMaterials,
         refreshProgress,
         refreshQuizHistory,
