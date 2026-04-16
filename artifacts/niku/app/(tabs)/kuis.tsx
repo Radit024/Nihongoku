@@ -4,12 +4,11 @@ import React, { useCallback, useState } from "react";
 import {
   FlatList,
   Platform,
-  Pressable,
   RefreshControl,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { Button, Card, Chip, Text } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppContext } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
@@ -59,10 +58,10 @@ export default function KuisScreen() {
     header: {
       paddingTop: topPad + 20,
       paddingHorizontal: 20,
-      paddingBottom: 20,
+      paddingBottom: 16,
       backgroundColor: colors.primary,
-      borderBottomLeftRadius: 32,
-      borderBottomRightRadius: 32,
+      borderBottomLeftRadius: 26,
+      borderBottomRightRadius: 26,
     },
     headerTitle: {
       fontSize: 26,
@@ -74,22 +73,19 @@ export default function KuisScreen() {
       fontFamily: fonts.semiBold,
       color: colors.primaryForeground,
       opacity: 0.75,
-      marginTop: 2,
+      marginTop: 4,
     },
-    list: { padding: 20, paddingBottom: 100 },
+    list: { padding: 16, paddingBottom: 100, paddingTop: 14 },
     card: {
-      backgroundColor: colors.card,
-      borderRadius: 20,
-      padding: 16,
+      backgroundColor: "#FFFDFB",
+      borderRadius: 18,
       marginBottom: 12,
+      overflow: "hidden",
+    },
+    cardRow: {
       flexDirection: "row",
       alignItems: "center",
       gap: 14,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
-      shadowRadius: 8,
-      elevation: 3,
     },
     iconCircle: {
       width: 48,
@@ -98,9 +94,9 @@ export default function KuisScreen() {
       alignItems: "center",
       justifyContent: "center",
     },
-    cardContent: { flex: 1 },
+    cardBody: { flex: 1 },
     cardTitle: {
-      fontSize: 15,
+      fontSize: 16,
       fontFamily: fonts.extraBold,
       color: colors.foreground,
     },
@@ -117,8 +113,8 @@ export default function KuisScreen() {
     },
     scorePill: {
       borderRadius: 20,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
       flexDirection: "row",
       alignItems: "center",
       gap: 3,
@@ -157,33 +153,30 @@ export default function KuisScreen() {
     const meta = CATEGORY_META[item.category] || { color: colors.primary, icon: "help-circle-outline" as const };
 
     return (
-      <Pressable style={styles.card} onPress={() => router.push(`/quiz/${item.id}`)}>
-        <View style={[styles.iconCircle, { backgroundColor: meta.color + "18" }]}>
-          <Ionicons name={meta.icon} size={24} color={meta.color} />
-        </View>
-        <View style={styles.cardContent}>
-          <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
-          <View style={styles.cardMeta}>
-            <Text style={styles.metaText}>{item.questionCount} soal</Text>
-            {best && (
-              <View style={[styles.scorePill, { backgroundColor: best.passed ? "#ECFDF5" : "#FFF0F0" }]}>
-                <Ionicons
-                  name={best.passed ? "checkmark-circle" : "close-circle"}
-                  size={12}
-                  color={best.passed ? "#059669" : "#C0272D"}
-                />
-                <Text style={[styles.scoreText, { color: best.passed ? "#059669" : "#C0272D" }]}>
-                  {best.score}/{best.total}
-                </Text>
-              </View>
+      <Card style={styles.card} mode="elevated" onPress={() => router.push(`/quiz/${item.id}`)}>
+        <Card.Content style={styles.cardRow}>
+          <View style={[styles.iconCircle, { backgroundColor: meta.color + "18" }]}> 
+            <Ionicons name={meta.icon} size={24} color={meta.color} />
+          </View>
+          <View style={styles.cardBody}>
+            <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
+            <View style={styles.cardMeta}>
+              <Text style={styles.metaText}>{item.questionCount} soal</Text>
+              {best && (
+                <Chip compact style={[styles.scorePill, { backgroundColor: best.passed ? "#ECFDF5" : "#FFF0F0" }]}>
+                  <Text style={[styles.scoreText, { color: best.passed ? "#059669" : "#C0272D" }]}> 
+                    {best.score}/{best.total}
+                  </Text>
+                </Chip>
+              )}
+            </View>
+            {best && !best.passed && (
+              <Text style={styles.retryTag}>Coba lagi untuk lulus</Text>
             )}
           </View>
-          {best && !best.passed && (
-            <Text style={styles.retryTag}>Coba lagi untuk lulus</Text>
-          )}
-        </View>
-        <Ionicons name="chevron-forward" size={20} color={colors.mutedForeground} />
-      </Pressable>
+          <Button compact mode="text" icon="chevron-right" onPress={() => router.push(`/quiz/${item.id}`)}>Buka</Button>
+        </Card.Content>
+      </Card>
     );
   };
 

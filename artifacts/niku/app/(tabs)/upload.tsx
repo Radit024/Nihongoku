@@ -1,23 +1,30 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
-import * as ImagePicker from "expo-image-picker";
 import * as Haptics from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   FlatList,
   Platform,
-  Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import {
+  ActivityIndicator,
+  Button,
+  Card,
+  Chip,
+  IconButton,
+  Surface,
+  Text,
+} from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { fonts } from "@/constants/fonts";
 import { useAppContext } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
 import { api, ApiMaterial } from "@/lib/api";
-import { fonts } from "@/constants/fonts";
 
 const CATEGORY_COLORS: Record<string, string> = {
   "Tata Bahasa": "#C0272D",
@@ -40,7 +47,29 @@ export default function UploadScreen() {
     refreshMaterials();
   }, []);
 
-  const myMaterials = materials.filter(m => m.createdById === user?.id);
+  const myMaterials = materials.filter((m) => m.createdById === user?.id);
+
+  const uploadFile = async (file: { uri: string; name: string; type: string }) => {
+    if (!user) return;
+    setIsUploading(true);
+    setUploadSuccess(false);
+    setUploadStatus("Mengunggah dan memproses dengan AI...");
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    try {
+      const result = await api.uploadMaterial(user.id, file);
+      setUploadStatus(`\"${result.title}\" berhasil dibuat dengan ${result.questionCount} soal.`);
+      setUploadSuccess(true);
+      await refreshMaterials();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (err: any) {
+      setUploadStatus("");
+      Alert.alert("Gagal Upload", err.message || "Terjadi kesalahan saat memproses materi");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const pickDocument = async () => {
     try {
@@ -83,30 +112,9 @@ export default function UploadScreen() {
     }
   };
 
-  const uploadFile = async (file: { uri: string; name: string; type: string }) => {
-    if (!user) return;
-    setIsUploading(true);
-    setUploadSuccess(false);
-    setUploadStatus("Mengunggah dan memproses dengan AI...");
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    try {
-      const result = await api.uploadMaterial(user.id, file);
-      setUploadStatus(`"${result.title}" berhasil dibuat — ${result.questionCount} soal kuis siap!`);
-      setUploadSuccess(true);
-      await refreshMaterials();
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (err: any) {
-      setUploadStatus("");
-      Alert.alert("Gagal Upload", err.message || "Terjadi kesalahan saat memproses materi");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   const handleDelete = async (materialId: string, title: string) => {
     if (!user) return;
+
     const doDelete = () => {
       api.deleteMaterial(user.id, materialId)
         .then(() => refreshMaterials())
@@ -114,13 +122,14 @@ export default function UploadScreen() {
     };
 
     if (Platform.OS === "web") {
-      if (confirm(`Hapus materi "${title}"?`)) doDelete();
-    } else {
-      Alert.alert("Hapus Materi", `Hapus "${title}" dan semua soal kuisnya?`, [
-        { text: "Batal", style: "cancel" },
-        { text: "Hapus", style: "destructive", onPress: doDelete },
-      ]);
+      if (confirm(`Hapus materi \"${title}\"?`)) doDelete();
+      return;
     }
+
+    Alert.alert("Hapus Materi", `Hapus \"${title}\" dan semua soal kuisnya?`, [
+      { text: "Batal", style: "cancel" },
+      { text: "Hapus", style: "destructive", onPress: doDelete },
+    ]);
   };
 
   const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
@@ -130,10 +139,10 @@ export default function UploadScreen() {
     header: {
       paddingTop: topPad + 20,
       paddingHorizontal: 20,
-      paddingBottom: 20,
+      paddingBottom: 16,
       backgroundColor: colors.primary,
-      borderBottomLeftRadius: 32,
-      borderBottomRightRadius: 32,
+      borderBottomLeftRadius: 26,
+      borderBottomRightRadius: 26,
     },
     headerTitle: {
       fontSize: 26,
@@ -144,105 +153,58 @@ export default function UploadScreen() {
       fontSize: 13,
       fontFamily: fonts.regular,
       color: colors.primaryForeground,
-      opacity: 0.78,
+      opacity: 0.84,
       marginTop: 4,
-      lineHeight: 18,
     },
-    content: { padding: 20, paddingBottom: 100 },
-    uploadSectionTitle: {
-      fontSize: 15,
-      fontFamily: fonts.extraBold,
-      color: colors.foreground,
-      marginBottom: 12,
-    },
-    uploadSection: {
-      flexDirection: "row",
+    content: {
+      padding: 16,
+      paddingBottom: 120,
       gap: 12,
-      marginBottom: 16,
     },
-    uploadBtn: {
+    uploadActions: {
+      flexDirection: "row",
+      gap: 10,
+    },
+    actionCard: {
       flex: 1,
-      backgroundColor: colors.card,
-      borderRadius: 20,
-      borderWidth: 2,
-      borderColor: colors.border,
-      borderStyle: "dashed",
-      paddingVertical: 24,
-      paddingHorizontal: 12,
+      borderRadius: 16,
+      backgroundColor: "#FFFDFB",
+    },
+    actionTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 14,
+      color: colors.foreground,
+      marginBottom: 8,
+    },
+    sectionTitle: {
+      fontFamily: fonts.extraBold,
+      fontSize: 18,
+      color: colors.foreground,
+      marginTop: 6,
+      marginBottom: 4,
+    },
+    statusCard: {
+      borderRadius: 16,
+      backgroundColor: uploadSuccess ? "#ECFDF5" : "#EFF6FF",
+      borderWidth: 1,
+      borderColor: uploadSuccess ? "#A7F3D0" : "#BFDBFE",
+    },
+    statusRow: {
+      flexDirection: "row",
       alignItems: "center",
       gap: 10,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 8,
-      elevation: 2,
-    },
-    uploadBtnIconBox: {
-      width: 52,
-      height: 52,
-      borderRadius: 16,
-      backgroundColor: "#FFF0F0",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    uploadBtnText: {
-      fontSize: 14,
-      fontFamily: fonts.bold,
-      color: colors.foreground,
-      textAlign: "center",
-    },
-    uploadBtnSub: {
-      fontSize: 11,
-      fontFamily: fonts.regular,
-      color: colors.mutedForeground,
-      textAlign: "center",
-    },
-    statusBox: {
-      borderRadius: 18,
-      padding: 16,
-      marginBottom: 16,
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 12,
-    },
-    statusProcessing: {
-      backgroundColor: "#EFF6FF",
-      borderLeftWidth: 3,
-      borderLeftColor: "#2563EB",
-    },
-    statusSuccess: {
-      backgroundColor: "#ECFDF5",
-      borderLeftWidth: 3,
-      borderLeftColor: "#059669",
     },
     statusText: {
       flex: 1,
-      fontSize: 14,
       fontFamily: fonts.semiBold,
+      fontSize: 13,
       color: colors.foreground,
-      lineHeight: 20,
-    },
-    divider: {
-      height: 1,
-      backgroundColor: colors.border,
-      marginVertical: 20,
-    },
-    sectionTitle: {
-      fontSize: 18,
-      fontFamily: fonts.extraBold,
-      color: colors.foreground,
-      marginBottom: 14,
+      lineHeight: 19,
     },
     materialCard: {
-      backgroundColor: colors.card,
-      borderRadius: 20,
-      padding: 16,
-      marginBottom: 12,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.06,
-      shadowRadius: 8,
-      elevation: 3,
+      borderRadius: 16,
+      backgroundColor: "#FFFDFB",
+      marginBottom: 10,
     },
     materialRow: {
       flexDirection: "row",
@@ -251,42 +213,27 @@ export default function UploadScreen() {
       gap: 8,
     },
     materialTitle: {
-      fontSize: 15,
-      fontFamily: fonts.extraBold,
-      color: colors.foreground,
       flex: 1,
+      fontFamily: fonts.extraBold,
+      fontSize: 15,
+      color: colors.foreground,
+      lineHeight: 21,
     },
     materialMeta: {
       flexDirection: "row",
       alignItems: "center",
       gap: 8,
-      marginTop: 8,
-    },
-    badge: {
-      borderRadius: 20,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-    },
-    badgeText: {
-      fontSize: 11,
-      fontFamily: fonts.bold,
+      marginTop: 10,
     },
     metaText: {
-      fontSize: 12,
       fontFamily: fonts.semiBold,
+      fontSize: 12,
       color: colors.mutedForeground,
-    },
-    deleteBtn: {
-      width: 34,
-      height: 34,
-      borderRadius: 10,
-      backgroundColor: "#FFF0F0",
-      alignItems: "center",
-      justifyContent: "center",
     },
     emptyBox: {
       alignItems: "center",
-      paddingVertical: 32,
+      justifyContent: "center",
+      paddingVertical: 40,
       gap: 10,
     },
     emptyText: {
@@ -301,7 +248,7 @@ export default function UploadScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Upload Materi</Text>
-        <Text style={styles.headerSub}>Unggah PDF atau foto — AI otomatis buat soal kuis</Text>
+        <Text style={styles.headerSub}>Unggah PDF atau foto, AI akan menyiapkan materi dan kuis otomatis.</Text>
       </View>
 
       <FlatList
@@ -310,65 +257,90 @@ export default function UploadScreen() {
         contentContainerStyle={styles.content}
         ListHeaderComponent={
           <>
-            <Text style={styles.uploadSectionTitle}>Pilih File</Text>
-            <View style={styles.uploadSection}>
-              <Pressable
-                style={[styles.uploadBtn, isUploading && { opacity: 0.5 }]}
-                onPress={pickDocument}
-                disabled={isUploading}
-              >
-                <View style={styles.uploadBtnIconBox}>
-                  <Ionicons name="document-text-outline" size={26} color={colors.primary} />
-                </View>
-                <Text style={styles.uploadBtnText}>Upload PDF</Text>
-                <Text style={styles.uploadBtnSub}>Dokumen materi</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.uploadBtn, isUploading && { opacity: 0.5 }]}
-                onPress={pickImage}
-                disabled={isUploading}
-              >
-                <View style={styles.uploadBtnIconBox}>
-                  <Ionicons name="camera-outline" size={26} color={colors.primary} />
-                </View>
-                <Text style={styles.uploadBtnText}>Foto Materi</Text>
-                <Text style={styles.uploadBtnSub}>Foto papan tulis / buku</Text>
-              </Pressable>
-            </View>
+            <Surface style={{ borderRadius: 16, padding: 12, backgroundColor: "#FFFDFB" }} elevation={1}>
+              <View style={styles.uploadActions}>
+                <Card style={styles.actionCard} mode="outlined">
+                  <Card.Content>
+                    <Text style={styles.actionTitle}>Dokumen PDF</Text>
+                    <Button
+                      mode="contained-tonal"
+                      icon="file-document-outline"
+                      onPress={pickDocument}
+                      disabled={isUploading}
+                      contentStyle={{ height: 42 }}
+                      labelStyle={{ fontFamily: fonts.bold }}
+                    >
+                      Pilih File
+                    </Button>
+                  </Card.Content>
+                </Card>
+
+                <Card style={styles.actionCard} mode="outlined">
+                  <Card.Content>
+                    <Text style={styles.actionTitle}>Foto Materi</Text>
+                    <Button
+                      mode="contained-tonal"
+                      icon="camera-outline"
+                      onPress={pickImage}
+                      disabled={isUploading}
+                      contentStyle={{ height: 42 }}
+                      labelStyle={{ fontFamily: fonts.bold }}
+                    >
+                      Pilih Foto
+                    </Button>
+                  </Card.Content>
+                </Card>
+              </View>
+            </Surface>
 
             {(isUploading || uploadStatus) && (
-              <View style={[styles.statusBox, uploadSuccess ? styles.statusSuccess : styles.statusProcessing]}>
-                {isUploading
-                  ? <ActivityIndicator color="#2563EB" size="small" />
-                  : <Ionicons name="checkmark-circle" size={20} color="#059669" />
-                }
-                <Text style={styles.statusText}>
-                  {isUploading ? "Memproses dengan AI... ini mungkin 30-60 detik" : uploadStatus}
-                </Text>
-              </View>
+              <Card style={styles.statusCard} mode="contained">
+                <Card.Content>
+                  <View style={styles.statusRow}>
+                    {isUploading ? (
+                      <ActivityIndicator size="small" color="#2563EB" />
+                    ) : (
+                      <Ionicons name="checkmark-circle" size={20} color="#059669" />
+                    )}
+                    <Text style={styles.statusText}>
+                      {isUploading
+                        ? "Memproses materi dengan AI. Tunggu sekitar 30-60 detik."
+                        : uploadStatus}
+                    </Text>
+                  </View>
+                </Card.Content>
+              </Card>
             )}
 
-            <View style={styles.divider} />
             <Text style={styles.sectionTitle}>Materi Saya ({myMaterials.length})</Text>
           </>
         }
         renderItem={({ item }: { item: ApiMaterial }) => {
           const catColor = CATEGORY_COLORS[item.category] || colors.primary;
           return (
-            <View style={styles.materialCard}>
-              <View style={styles.materialRow}>
-                <Text style={styles.materialTitle} numberOfLines={2}>{item.title}</Text>
-                <Pressable style={styles.deleteBtn} onPress={() => handleDelete(item.id, item.title)}>
-                  <Ionicons name="trash-outline" size={16} color={colors.destructive} />
-                </Pressable>
-              </View>
-              <View style={styles.materialMeta}>
-                <View style={[styles.badge, { backgroundColor: catColor + "18" }]}>
-                  <Text style={[styles.badgeText, { color: catColor }]}>{item.category}</Text>
+            <Card style={styles.materialCard} mode="elevated">
+              <Card.Content>
+                <View style={styles.materialRow}>
+                  <Text style={styles.materialTitle} numberOfLines={2}>{item.title}</Text>
+                  <IconButton
+                    icon="trash-can-outline"
+                    size={18}
+                    iconColor={colors.destructive}
+                    onPress={() => handleDelete(item.id, item.title)}
+                  />
                 </View>
-                <Text style={styles.metaText}>{item.questionCount} soal</Text>
-              </View>
-            </View>
+                <View style={styles.materialMeta}>
+                  <Chip
+                    compact
+                    style={{ backgroundColor: `${catColor}22` }}
+                    textStyle={{ color: catColor, fontFamily: fonts.bold }}
+                  >
+                    {item.category}
+                  </Chip>
+                  <Text style={styles.metaText}>{item.questionCount} soal</Text>
+                </View>
+              </Card.Content>
+            </Card>
           );
         }}
         ListEmptyComponent={

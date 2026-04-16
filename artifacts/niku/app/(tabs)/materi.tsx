@@ -3,13 +3,19 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   Platform,
-  Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from "react-native";
+import {
+  Badge,
+  Card,
+  Chip,
+  Searchbar,
+  Surface,
+  Text,
+} from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppContext } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
@@ -70,10 +76,10 @@ export default function MateriScreen() {
     header: {
       paddingTop: topPad + 20,
       paddingHorizontal: 20,
-      paddingBottom: 20,
+      paddingBottom: 16,
       backgroundColor: colors.primary,
-      borderBottomLeftRadius: 32,
-      borderBottomRightRadius: 32,
+      borderBottomLeftRadius: 26,
+      borderBottomRightRadius: 26,
     },
     headerTitle: {
       fontSize: 26,
@@ -85,60 +91,41 @@ export default function MateriScreen() {
       fontFamily: fonts.semiBold,
       color: colors.primaryForeground,
       opacity: 0.75,
-      marginTop: 2,
+      marginTop: 4,
     },
-    searchWrapper: {
+    controls: {
+      marginTop: -16,
+      marginHorizontal: 16,
+      marginBottom: 8,
+      borderRadius: 18,
+      padding: 12,
+      backgroundColor: "#FFFCFA",
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    searchbar: {
+      backgroundColor: "#FFFFFF",
+      borderWidth: 1,
+      borderColor: colors.border,
+      elevation: 0,
+    },
+    chipRow: {
       flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: "rgba(255,255,255,0.18)",
-      borderRadius: 16,
-      paddingHorizontal: 14,
-      height: 46,
-      marginTop: 14,
-    },
-    searchInput: {
-      flex: 1,
-      fontSize: 14,
-      fontFamily: fonts.semiBold,
-      color: colors.primaryForeground,
-      marginLeft: 10,
-    },
-    chipScroll: {
       paddingHorizontal: 20,
-      paddingVertical: 14,
+      paddingVertical: 10,
       gap: 8,
     },
-    chip: {
-      paddingHorizontal: 16,
-      paddingVertical: 7,
-      borderRadius: 20,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
-    },
-    chipActive: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    chipText: {
-      fontSize: 13,
-      fontFamily: fonts.bold,
-      color: colors.foreground,
-    },
-    chipTextActive: {
-      color: colors.primaryForeground,
-    },
-    list: { paddingHorizontal: 20, paddingBottom: 100 },
+    list: { paddingHorizontal: 16, paddingBottom: 100, paddingTop: 2 },
     card: {
-      backgroundColor: colors.card,
-      borderRadius: 20,
-      padding: 16,
+      backgroundColor: "#FFFDFB",
+      borderRadius: 18,
       marginBottom: 12,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.07,
-      shadowRadius: 8,
-      elevation: 3,
+      flexDirection: "row",
+      gap: 14,
+      alignItems: "flex-start",
+      overflow: "hidden",
+    },
+    cardContent: {
       flexDirection: "row",
       gap: 14,
       alignItems: "flex-start",
@@ -158,7 +145,7 @@ export default function MateriScreen() {
       alignItems: "flex-start",
     },
     cardTitle: {
-      fontSize: 15,
+      fontSize: 16,
       fontFamily: fonts.extraBold,
       color: colors.foreground,
       flex: 1,
@@ -180,7 +167,7 @@ export default function MateriScreen() {
       fontSize: 13,
       fontFamily: fonts.regular,
       color: colors.mutedForeground,
-      marginTop: 4,
+      marginTop: 6,
       lineHeight: 18,
     },
     cardMeta: {
@@ -222,8 +209,9 @@ export default function MateriScreen() {
     const isMyMaterial = item.createdById === user?.id;
 
     return (
-      <Pressable
+      <Card
         style={styles.card}
+        mode="elevated"
         onPress={() => {
           if (isDosen) {
             router.push("/(tabs)/upload");
@@ -232,36 +220,40 @@ export default function MateriScreen() {
           }
         }}
       >
-        <View style={[styles.cardIcon, { backgroundColor: meta.color + "18" }]}>
-          <Ionicons name={meta.icon} size={22} color={meta.color} />
-        </View>
-        <View style={styles.cardBody}>
-          <View style={styles.cardRow}>
-            <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
-            {!isDosen && isPassed && (
-              <View style={[styles.statusBadge, { backgroundColor: "#ECFDF5" }]}>
-                <Ionicons name="checkmark-circle" size={12} color="#059669" />
-                <Text style={[styles.statusText, { color: "#059669" }]}>Lulus</Text>
-              </View>
-            )}
-            {isDosen && isMyMaterial && (
-              <View style={[styles.statusBadge, { backgroundColor: "#EFF6FF" }]}>
-                <Ionicons name="person" size={12} color="#2563EB" />
-                <Text style={[styles.statusText, { color: "#2563EB" }]}>Milik Saya</Text>
-              </View>
-            )}
+        <Card.Content style={styles.cardContent}>
+          <View style={[styles.cardIcon, { backgroundColor: meta.color + "18" }]}> 
+            <Ionicons name={meta.icon} size={22} color={meta.color} />
           </View>
-          {item.description ? (
-            <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
-          ) : null}
-          <View style={styles.cardMeta}>
-            <View style={[styles.metaBadge, { backgroundColor: meta.color + "18" }]}>
-              <Text style={[styles.metaBadgeText, { color: meta.color }]}>{item.category}</Text>
+          <View style={styles.cardBody}>
+            <View style={styles.cardRow}>
+              <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
+              {!isDosen && isPassed && (
+                <View style={[styles.statusBadge, { backgroundColor: "#ECFDF5" }]}> 
+                  <Ionicons name="checkmark-circle" size={12} color="#059669" />
+                  <Text style={[styles.statusText, { color: "#059669" }]}>Lulus</Text>
+                </View>
+              )}
+              {isDosen && isMyMaterial && (
+                <View style={[styles.statusBadge, { backgroundColor: "#EFF6FF" }]}> 
+                  <Ionicons name="person" size={12} color="#2563EB" />
+                  <Text style={[styles.statusText, { color: "#2563EB" }]}>Milik Saya</Text>
+                </View>
+              )}
             </View>
-            <Text style={styles.metaText}>{item.questionCount} soal</Text>
+
+            {item.description ? (
+              <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
+            ) : null}
+
+            <View style={styles.cardMeta}>
+              <Chip compact style={[styles.metaBadge, { backgroundColor: meta.color + "18" }]} textStyle={[styles.metaBadgeText, { color: meta.color }]}>
+                {item.category}
+              </Chip>
+              <Text style={styles.metaText}>{item.questionCount} soal</Text>
+            </View>
           </View>
-        </View>
-      </Pressable>
+        </Card.Content>
+      </Card>
     );
   };
 
@@ -270,22 +262,17 @@ export default function MateriScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Materi</Text>
         <Text style={styles.headerSub}>{materials.length} materi tersedia</Text>
-        <View style={styles.searchWrapper}>
-          <Ionicons name="search" size={18} color="rgba(255,255,255,0.8)" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Cari materi..."
-            placeholderTextColor="rgba(255,255,255,0.5)"
-            value={search}
-            onChangeText={setSearch}
-          />
-          {search ? (
-            <Pressable onPress={() => setSearch("")}>
-              <Ionicons name="close-circle" size={18} color="rgba(255,255,255,0.7)" />
-            </Pressable>
-          ) : null}
-        </View>
       </View>
+
+      <Surface style={styles.controls} elevation={1}>
+        <Searchbar
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Cari materi..."
+          style={styles.searchbar}
+          inputStyle={{ fontFamily: fonts.semiBold, fontSize: 14 }}
+        />
+      </Surface>
 
       <FlatList
         data={filtered}
@@ -296,21 +283,20 @@ export default function MateriScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
         }
         ListHeaderComponent={
-          <FlatList
-            data={ALL_CATEGORIES}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => item}
-            contentContainerStyle={styles.chipScroll}
-            renderItem={({ item }) => (
-              <Pressable
-                style={[styles.chip, selectedCategory === item && styles.chipActive]}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
+            {ALL_CATEGORIES.map((item) => (
+              <Chip
+                key={item}
+                selected={selectedCategory === item}
+                showSelectedOverlay
+                selectedColor={colors.primary}
                 onPress={() => setSelectedCategory(item)}
+                textStyle={{ fontFamily: fonts.bold }}
               >
-                <Text style={[styles.chipText, selectedCategory === item && styles.chipTextActive]}>{item}</Text>
-              </Pressable>
-            )}
-          />
+                {item}
+              </Chip>
+            ))}
+          </ScrollView>
         }
         ListEmptyComponent={
           <View style={styles.emptyBox}>

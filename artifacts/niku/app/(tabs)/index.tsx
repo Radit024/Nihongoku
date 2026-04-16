@@ -4,11 +4,19 @@ import React, { useEffect } from "react";
 import {
   FlatList,
   Platform,
-  Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import {
+  Avatar,
+  Button,
+  Card,
+  Chip,
+  IconButton,
+  ProgressBar,
+  Surface,
+  Text,
+} from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppContext } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
@@ -60,16 +68,16 @@ export default function BerandaScreen() {
     header: {
       paddingTop: topPad + 10,
       paddingHorizontal: 20,
-      paddingBottom: 22,
+      paddingBottom: 18,
       backgroundColor: colors.primary,
-      borderBottomLeftRadius: 32,
-      borderBottomRightRadius: 32,
+      borderBottomLeftRadius: 28,
+      borderBottomRightRadius: 28,
     },
     headerUserRow: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginBottom: 14,
+      marginBottom: 10,
     },
     headerUserLeft: {
       flexDirection: "row",
@@ -77,21 +85,6 @@ export default function BerandaScreen() {
       gap: 12,
       flex: 1,
       minWidth: 0,
-    },
-    avatarCircle: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: "rgba(255,255,255,0.6)",
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: "rgba(255,255,255,0.18)",
-    },
-    avatarInitial: {
-      fontSize: 14,
-      fontFamily: fonts.extraBold,
-      color: colors.primaryForeground,
     },
     headerUserInfo: {
       flex: 1,
@@ -110,12 +103,7 @@ export default function BerandaScreen() {
       marginTop: 2,
     },
     headerActionBtn: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: "rgba(255,255,255,0.18)",
+      backgroundColor: "rgba(255,255,255,0.2)",
     },
     greetRow: {
       flexDirection: "row",
@@ -162,7 +150,7 @@ export default function BerandaScreen() {
       color: colors.primaryForeground,
     },
     xpRow: {
-      marginTop: 2,
+      marginTop: 4,
     },
     xpLabelRow: {
       flexDirection: "row",
@@ -182,19 +170,15 @@ export default function BerandaScreen() {
       color: colors.primaryForeground,
     },
     xpBar: {
-      height: 7,
+      height: 8,
+      borderRadius: 999,
       backgroundColor: "rgba(255,255,255,0.25)",
-      borderRadius: 999,
-    },
-    xpFill: {
-      height: 7,
-      borderRadius: 999,
-      backgroundColor: colors.primaryForeground,
+      marginTop: 2,
     },
     mahasiswaStatsWrap: {
-      paddingHorizontal: 12,
-      marginTop: -10,
-      marginBottom: 10,
+      paddingHorizontal: 16,
+      marginTop: -14,
+      marginBottom: 12,
     },
     mahasiswaStatsRow: {
       flexDirection: "row",
@@ -203,7 +187,7 @@ export default function BerandaScreen() {
     },
     mahasiswaStatCard: {
       flex: 1,
-      backgroundColor: colors.card,
+      backgroundColor: "#FFFDFB",
       borderRadius: 14,
       borderWidth: 1,
       borderColor: colors.border,
@@ -275,14 +259,13 @@ export default function BerandaScreen() {
     },
     categoryCard: {
       width: "47%" as any,
-      backgroundColor: colors.card,
+      backgroundColor: "#FFFDFB",
       borderRadius: 20,
-      padding: 16,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.06,
-      shadowRadius: 8,
-      elevation: 3,
+      padding: 0,
+      overflow: "hidden",
+    },
+    categoryCardContent: {
+      padding: 14,
     },
     categoryIcon: {
       width: 44,
@@ -304,7 +287,7 @@ export default function BerandaScreen() {
       marginTop: 2,
     },
     ctaCard: {
-      backgroundColor: colors.card,
+      backgroundColor: "#FFFDFB",
       borderRadius: 20,
       padding: 18,
       marginTop: 20,
@@ -371,6 +354,16 @@ export default function BerandaScreen() {
         </View>
       </View>
 
+      {user?.classCode && (
+        <Chip
+          icon="school"
+          style={{ alignSelf: "flex-start", marginTop: 10, backgroundColor: "rgba(255,255,255,0.2)" }}
+          textStyle={{ color: colors.primaryForeground, fontFamily: fonts.bold }}
+        >
+          Kelas {user.classCode}
+        </Chip>
+      )}
+
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
           <Text style={styles.statVal}>{myMaterials.length}</Text>
@@ -392,17 +385,28 @@ export default function BerandaScreen() {
     <View style={styles.header}>
       <View style={styles.headerUserRow}>
         <View style={styles.headerUserLeft}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarInitial}>{userInitial}</Text>
-          </View>
+          <Avatar.Text
+            size={40}
+            label={userInitial}
+            color={colors.primary}
+            style={{ backgroundColor: "#FFFFFF" }}
+            labelStyle={{ fontFamily: fonts.extraBold }}
+          />
           <View style={styles.headerUserInfo}>
             <Text numberOfLines={1} style={styles.headerUserName}>{fullName}</Text>
             <Text style={styles.headerUserMeta}>Mahasiswa · Lv.{levelInfo.level} {levelInfo.title}</Text>
+            {!!user?.classCode && (
+              <Text style={[styles.headerUserMeta, { opacity: 0.95 }]}>Kelas {user.classCode}</Text>
+            )}
           </View>
         </View>
-        <Pressable style={styles.headerActionBtn} onPress={() => router.push("/(tabs)/progress")}>
-          <Ionicons name="create-outline" size={14} color={colors.primaryForeground} />
-        </Pressable>
+        <IconButton
+          icon="account-edit-outline"
+          size={18}
+          iconColor={colors.primaryForeground}
+          containerColor={styles.headerActionBtn.backgroundColor as string}
+          onPress={() => router.push("/(tabs)/progress")}
+        />
       </View>
 
       <View style={styles.xpRow}>
@@ -410,9 +414,7 @@ export default function BerandaScreen() {
           <Text style={styles.xpLabel}>Progress Lv.{levelInfo.level + 1}</Text>
           <Text style={styles.xpVal}>{xp} XP · {xpPct}%</Text>
         </View>
-        <View style={styles.xpBar}>
-          <View style={[styles.xpFill, { width: `${xpPct}%` }]} />
-        </View>
+        <ProgressBar progress={xpPct / 100} color={colors.primaryForeground} style={styles.xpBar} />
       </View>
     </View>
   );
@@ -429,34 +431,34 @@ export default function BerandaScreen() {
           {!isDosen && (
             <View style={styles.mahasiswaStatsWrap}>
               <View style={styles.mahasiswaStatsRow}>
-                <View style={styles.mahasiswaStatCard}>
+                <Surface style={styles.mahasiswaStatCard} elevation={2}>
                   <View style={[styles.mahasiswaStatIcon, { backgroundColor: "#FFF3F3" }]}>
                     <Ionicons name="flash" size={13} color={colors.primary} />
                   </View>
                   <Text style={styles.mahasiswaStatVal}>{xp}</Text>
                   <Text style={styles.mahasiswaStatLabel}>Total XP</Text>
-                </View>
-                <View style={styles.mahasiswaStatCard}>
+                </Surface>
+                <Surface style={styles.mahasiswaStatCard} elevation={2}>
                   <View style={[styles.mahasiswaStatIcon, { backgroundColor: "#FFF8E9" }]}>
                     <Ionicons name="flame" size={13} color="#D97706" />
                   </View>
                   <Text style={styles.mahasiswaStatVal}>{streak}</Text>
                   <Text style={styles.mahasiswaStatLabel}>Streak</Text>
-                </View>
-                <View style={styles.mahasiswaStatCard}>
+                </Surface>
+                <Surface style={styles.mahasiswaStatCard} elevation={2}>
                   <View style={[styles.mahasiswaStatIcon, { backgroundColor: "#ECFDF5" }]}>
                     <Ionicons name="trophy" size={13} color="#059669" />
                   </View>
                   <Text style={styles.mahasiswaStatVal}>{progressData?.passedQuizzes ?? 0}</Text>
                   <Text style={styles.mahasiswaStatLabel}>Kuis Lulus</Text>
-                </View>
-                <View style={styles.mahasiswaStatCard}>
+                </Surface>
+                <Surface style={styles.mahasiswaStatCard} elevation={2}>
                   <View style={[styles.mahasiswaStatIcon, { backgroundColor: "#EFF6FF" }]}>
                     <Ionicons name="document-text" size={13} color="#2563EB" />
                   </View>
                   <Text style={styles.mahasiswaStatVal}>{progressData?.totalQuizzes ?? 0}</Text>
                   <Text style={styles.mahasiswaStatLabel}>Total Kuis</Text>
-                </View>
+                </Surface>
               </View>
             </View>
           )}
@@ -466,54 +468,59 @@ export default function BerandaScreen() {
             {activeCategories.length > 0 ? (
               <View style={styles.categoryGrid}>
                 {activeCategories.map((cat) => (
-                  <Pressable
+                  <Card
                     key={cat.key}
                     style={styles.categoryCard}
+                    mode="elevated"
                     onPress={() => router.push({ pathname: "/(tabs)/materi", params: { filter: cat.key } })}
                   >
-                    <View style={[styles.categoryIcon, { backgroundColor: cat.bg }]}>
-                      <Ionicons name={cat.icon} size={22} color={cat.color} />
-                    </View>
-                    <Text style={styles.categoryName}>{cat.key}</Text>
-                    <Text style={styles.categoryCount}>{categoryCounts[cat.key]} materi</Text>
-                  </Pressable>
+                    <Card.Content style={styles.categoryCardContent}>
+                      <View style={[styles.categoryIcon, { backgroundColor: cat.bg }]}> 
+                        <Ionicons name={cat.icon} size={22} color={cat.color} />
+                      </View>
+                      <Text style={styles.categoryName}>{cat.key}</Text>
+                      <Text style={styles.categoryCount}>{categoryCounts[cat.key]} materi</Text>
+                    </Card.Content>
+                  </Card>
                 ))}
               </View>
             ) : (
-              <View style={styles.emptyBox}>
-                <Ionicons name="book-outline" size={36} color={colors.mutedForeground} />
-                <Text style={styles.emptyText}>
-                  {isDosen
-                    ? "Belum ada materi.\nMulai unggah di tab Upload!"
-                    : "Belum ada materi.\nTunggu dosen mengunggah materi."}
-                </Text>
-              </View>
+              <Card mode="outlined" style={{ borderRadius: 18 }}>
+                <Card.Content style={styles.emptyBox}>
+                  <Ionicons name="book-outline" size={36} color={colors.mutedForeground} />
+                  <Text style={styles.emptyText}>
+                    {isDosen
+                      ? "Belum ada materi. Mulai upload dari tab Upload."
+                      : "Belum ada materi. Tunggu dosen mengunggah materi."}
+                  </Text>
+                </Card.Content>
+              </Card>
             )}
 
             {isDosen && (
-              <Pressable style={styles.ctaCard} onPress={() => router.push("/(tabs)/upload")}>
+              <Card mode="elevated" style={styles.ctaCard}>
                 <View style={styles.ctaIconBox}>
                   <Ionicons name="cloud-upload-outline" size={26} color={colors.primary} />
                 </View>
                 <View style={styles.ctaContent}>
                   <Text style={styles.ctaTitle}>Upload Materi Baru</Text>
-                  <Text style={styles.ctaSub}>PDF atau foto — AI buat soal otomatis</Text>
+                  <Text style={styles.ctaSub}>PDF atau foto, lalu AI akan membuat kuis otomatis.</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.mutedForeground} />
-              </Pressable>
+                <Button mode="text" compact icon="arrow-right" onPress={() => router.push("/(tabs)/upload")}>Buka</Button>
+              </Card>
             )}
 
             {!isDosen && materials.length > 0 && (
-              <Pressable style={styles.ctaCard} onPress={() => router.push("/(tabs)/kuis")}>
+              <Card mode="elevated" style={styles.ctaCard}>
                 <View style={styles.ctaIconBox}>
                   <Ionicons name="help-circle-outline" size={26} color={colors.primary} />
                 </View>
                 <View style={styles.ctaContent}>
                   <Text style={styles.ctaTitle}>Mulai Kuis</Text>
-                  <Text style={styles.ctaSub}>{materials.length} kuis tersedia untukmu</Text>
+                  <Text style={styles.ctaSub}>{materials.length} kuis tersedia untuk kamu kerjakan.</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.mutedForeground} />
-              </Pressable>
+                <Button mode="text" compact icon="arrow-right" onPress={() => router.push("/(tabs)/kuis")}>Buka</Button>
+              </Card>
             )}
           </View>
         </>

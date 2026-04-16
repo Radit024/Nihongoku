@@ -1,7 +1,9 @@
 import { Link, Stack } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { Button, Card, Text } from "react-native-paper";
 
 import { useColors } from "@/hooks/useColors";
+import { fonts } from "@/constants/fonts";
 
 export default function NotFoundScreen() {
   const colors = useColors();
@@ -10,15 +12,15 @@ export default function NotFoundScreen() {
     <>
       <Stack.Screen options={{ title: "Oops!" }} />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.title, { color: colors.foreground }]}>
-          This screen doesn&apos;t exist.
-        </Text>
-
-        <Link href="/" style={styles.link}>
-          <Text style={[styles.linkText, { color: colors.primary }]}>
-            Go to home screen!
-          </Text>
-        </Link>
+        <Card style={styles.card} mode="elevated">
+          <Card.Content style={{ alignItems: "center", gap: 10 }}>
+            <Text style={[styles.title, { color: colors.foreground }]}>Halaman tidak ditemukan</Text>
+            <Text style={{ color: colors.mutedForeground }}>Rute yang kamu buka tidak tersedia.</Text>
+            <Link href="/" asChild>
+              <Button mode="contained" icon="home-outline">Kembali ke Beranda</Button>
+            </Link>
+          </Card.Content>
+        </Card>
       </View>
     </>
   );
@@ -31,15 +33,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 20,
   },
+  card: {
+    width: "100%",
+    maxWidth: 420,
+    borderRadius: 18,
+  },
   title: {
     fontSize: 20,
-    fontWeight: "bold",
-  },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
-  },
-  linkText: {
-    fontSize: 14,
+    fontFamily: fonts.extraBold,
   },
 });

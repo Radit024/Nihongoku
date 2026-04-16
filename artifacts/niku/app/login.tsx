@@ -1,22 +1,29 @@
-import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from "react-native";
+import {
+  ActivityIndicator,
+  Avatar,
+  Button,
+  Card,
+  HelperText,
+  SegmentedButtons,
+  Text,
+  TextInput,
+} from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { fonts } from "@/constants/fonts";
 import { useAppContext } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
-import { fonts } from "@/constants/fonts";
 
 export default function LoginScreen() {
   const colors = useColors();
@@ -32,10 +39,6 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const [nameFocused, setNameFocused] = useState(false);
-  const [emailFocused, setEmailFocused] = useState(false);
-  const [passwordFocused, setPasswordFocused] = useState(false);
-
   const handleSubmit = async () => {
     if (isRegister && !name.trim()) {
       setError("Harap isi nama lengkap.");
@@ -45,6 +48,7 @@ export default function LoginScreen() {
       setError("Harap isi email dan password.");
       return;
     }
+
     setError("");
     setIsLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -68,322 +72,202 @@ export default function LoginScreen() {
       flex: 1,
       backgroundColor: colors.background,
     },
-    blob1: {
-      position: "absolute",
-      width: 200,
-      height: 200,
-      borderRadius: 100,
-      backgroundColor: colors.primary,
-      opacity: 0.07,
-      top: -60,
-      right: -60,
-    },
-    blob2: {
-      position: "absolute",
-      width: 160,
-      height: 160,
-      borderRadius: 80,
-      backgroundColor: colors.accent,
-      opacity: 0.1,
-      bottom: 120,
-      left: -50,
-    },
-    blob3: {
-      position: "absolute",
-      width: 100,
-      height: 100,
-      borderRadius: 50,
-      backgroundColor: colors.sakura,
-      opacity: 0.15,
-      top: 200,
-      right: 20,
-    },
-    scroll: {
-      flexGrow: 1,
-      justifyContent: "center",
-      paddingHorizontal: 28,
-      paddingTop: insets.top + (Platform.OS === "web" ? 67 : 20),
-      paddingBottom: insets.bottom + 40,
-    },
-    topDecoration: {
-      alignItems: "center",
-      marginBottom: 40,
-    },
-    logoCircle: {
-      width: 88,
-      height: 88,
-      borderRadius: 44,
-      backgroundColor: colors.primary,
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: 18,
-      shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.35,
-      shadowRadius: 20,
-      elevation: 14,
-    },
-    logoText: {
-      fontSize: 34,
-      fontWeight: "800" as const,
-      color: colors.primaryForeground,
-      fontFamily: fonts.black,
-    },
-    appName: {
-      fontSize: 36,
-      fontFamily: fonts.black,
-      color: colors.primary,
-      letterSpacing: 6,
-    },
-    appSubtitle: {
-      fontSize: 12,
-      fontFamily: fonts.semiBold,
-      color: colors.mutedForeground,
-      marginTop: 2,
-      letterSpacing: 3,
-    },
-    tagline: {
-      fontSize: 15,
-      fontFamily: fonts.regular,
-      color: colors.foreground,
-      marginTop: 10,
-      opacity: 0.65,
-    },
-    formCard: {
-      backgroundColor: colors.card,
-      borderRadius: 28,
-      padding: 24,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.08,
-      shadowRadius: 20,
-      elevation: 6,
-      gap: 12,
-      marginBottom: 8,
-    },
-    formLabel: {
-      fontSize: 18,
-      fontFamily: fonts.extraBold,
-      color: colors.foreground,
-      marginBottom: 4,
-    },
-    inputWrapper: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: colors.background,
-      borderRadius: 16,
-      borderWidth: 1.5,
-      borderColor: colors.border,
-      paddingHorizontal: 14,
-      height: 52,
-    },
-    inputWrapperFocused: {
-      borderColor: colors.primary,
-      backgroundColor: "#FFF5F5",
-    },
-    inputIcon: {
-      marginRight: 10,
-    },
-    input: {
-      flex: 1,
-      fontSize: 15,
-      fontFamily: fonts.semiBold,
-      color: colors.foreground,
-    },
-    roleRow: {
-      flexDirection: "row",
+    hero: {
+      marginHorizontal: 20,
+      marginTop: insets.top + (Platform.OS === "web" ? 67 : 10),
+      borderRadius: 24,
+      padding: 22,
+      overflow: "hidden",
       gap: 10,
     },
-    roleBtn: {
-      flex: 1,
+    heroTop: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "center",
-      gap: 8,
-      height: 48,
-      borderRadius: 14,
-      borderWidth: 2,
-      borderColor: colors.border,
-      backgroundColor: colors.background,
+      gap: 14,
     },
-    roleBtnActive: {
-      borderColor: colors.primary,
-      backgroundColor: "#FFF0F0",
+    heroTitle: {
+      fontFamily: fonts.black,
+      fontSize: 28,
+      color: colors.primaryForeground,
+      letterSpacing: 1,
     },
-    roleBtnText: {
-      fontSize: 14,
-      fontFamily: fonts.bold,
-      color: colors.mutedForeground,
-    },
-    roleBtnTextActive: {
-      color: colors.primary,
-    },
-    errorBox: {
-      backgroundColor: "#FFF0F0",
-      borderRadius: 12,
-      padding: 10,
-      borderLeftWidth: 3,
-      borderLeftColor: colors.destructive,
-    },
-    errorText: {
-      color: colors.destructive,
-      fontSize: 13,
+    heroSub: {
       fontFamily: fonts.semiBold,
+      fontSize: 12,
+      color: colors.primaryForeground,
+      opacity: 0.82,
+      marginTop: -4,
+      letterSpacing: 1.2,
+    },
+    heroTagline: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
+      color: colors.primaryForeground,
+      opacity: 0.9,
+      lineHeight: 19,
+    },
+    scroll: {
+      paddingHorizontal: 20,
+      paddingTop: 14,
+      paddingBottom: insets.bottom + 42,
+    },
+    formCard: {
+      borderRadius: 24,
+      backgroundColor: colors.card,
+    },
+    formContent: {
+      gap: 12,
+    },
+    formLabel: {
+      fontFamily: fonts.extraBold,
+      fontSize: 20,
+      color: colors.foreground,
+    },
+    segmentedWrap: {
+      marginBottom: 4,
+    },
+    inputLabel: {
+      fontFamily: fonts.bold,
+      fontSize: 13,
+      color: colors.mutedForeground,
+      marginBottom: -4,
     },
     submitBtn: {
-      backgroundColor: colors.primary,
-      borderRadius: 18,
-      height: 56,
-      alignItems: "center",
-      justifyContent: "center",
       marginTop: 4,
-      shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.4,
-      shadowRadius: 14,
-      elevation: 10,
     },
-    submitBtnDisabled: {
-      opacity: 0.7,
-    },
-    submitBtnText: {
-      color: colors.primaryForeground,
-      fontSize: 17,
-      fontFamily: fonts.extraBold,
-      letterSpacing: 0.5,
-    },
-    switchRow: {
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-      marginTop: 20,
-      gap: 4,
-    },
-    switchText: {
-      color: colors.mutedForeground,
-      fontSize: 14,
-      fontFamily: fonts.regular,
-    },
-    switchLink: {
-      color: colors.primary,
-      fontSize: 14,
-      fontFamily: fonts.extraBold,
+    switchBtn: {
+      marginTop: 6,
     },
   });
 
   return (
     <View style={styles.container}>
-      <View style={styles.blob1} />
-      <View style={styles.blob2} />
-      <View style={styles.blob3} />
+      <LinearGradient
+        colors={["#D54B4F", colors.primary, "#8B1D22"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.hero}
+      >
+        <View style={styles.heroTop}>
+          <Avatar.Text
+            size={56}
+            label={"\u306B"}
+            labelStyle={{ color: colors.primary, fontFamily: fonts.black }}
+            style={{ backgroundColor: "#FFFFFF" }}
+          />
+          <View>
+            <Text style={styles.heroTitle}>NIKU</Text>
+            <Text style={styles.heroSub}>NIHONGOKU LEARNING APP</Text>
+          </View>
+        </View>
+        <Text style={styles.heroTagline}>Belajar bahasa Jepang jadi lebih terarah, seru, dan mudah dipahami.</Text>
+      </LinearGradient>
+
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          <View style={styles.topDecoration}>
-            <View style={styles.logoCircle}>
-              <Text style={styles.logoText}>{"\u306B"}</Text>
-            </View>
-            <Text style={styles.appName}>NIKU</Text>
-            <Text style={styles.appSubtitle}>NIHONGOKU</Text>
-            <Text style={styles.tagline}>Belajar Bahasa Jepang dengan Mudah</Text>
-          </View>
+          <Card mode="elevated" style={styles.formCard}>
+            <Card.Content style={styles.formContent}>
+              <Text style={styles.formLabel}>{isRegister ? "Buat Akun Baru" : "Masuk ke Akun"}</Text>
 
-          <View style={styles.formCard}>
-            <Text style={styles.formLabel}>{isRegister ? "Buat Akun" : "Masuk"}</Text>
+              <View style={styles.segmentedWrap}>
+                <SegmentedButtons
+                  value={isRegister ? "register" : "login"}
+                  onValueChange={(value) => {
+                    setIsRegister(value === "register");
+                    setError("");
+                  }}
+                  buttons={[
+                    { value: "login", label: "Masuk" },
+                    { value: "register", label: "Daftar" },
+                  ]}
+                />
+              </View>
 
-            {isRegister && (
-              <>
-                <View style={[styles.inputWrapper, nameFocused && styles.inputWrapperFocused]}>
-                  <Ionicons name="person-outline" size={18} color={nameFocused ? colors.primary : colors.mutedForeground} style={styles.inputIcon} />
+              {isRegister && (
+                <>
+                  <Text style={styles.inputLabel}>Nama Lengkap</Text>
                   <TextInput
-                    style={styles.input}
-                    placeholder="Nama Lengkap"
-                    placeholderTextColor={colors.mutedForeground}
+                    mode="outlined"
                     value={name}
                     onChangeText={setName}
                     autoCapitalize="words"
-                    onFocus={() => setNameFocused(true)}
-                    onBlur={() => setNameFocused(false)}
+                    placeholder="Masukkan nama lengkap"
+                    left={<TextInput.Icon icon="account-outline" />}
                   />
-                </View>
 
-                <View style={styles.roleRow}>
-                  <Pressable
-                    style={[styles.roleBtn, role === "mahasiswa" && styles.roleBtnActive]}
-                    onPress={() => setRole("mahasiswa")}
-                  >
-                    <Ionicons name="school-outline" size={18} color={role === "mahasiswa" ? colors.primary : colors.mutedForeground} />
-                    <Text style={[styles.roleBtnText, role === "mahasiswa" && styles.roleBtnTextActive]}>Mahasiswa</Text>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.roleBtn, role === "dosen" && styles.roleBtnActive]}
-                    onPress={() => setRole("dosen")}
-                  >
-                    <Ionicons name="briefcase-outline" size={18} color={role === "dosen" ? colors.primary : colors.mutedForeground} />
-                    <Text style={[styles.roleBtnText, role === "dosen" && styles.roleBtnTextActive]}>Dosen</Text>
-                  </Pressable>
-                </View>
-              </>
-            )}
+                  <Text style={styles.inputLabel}>Peran</Text>
+                  <SegmentedButtons
+                    value={role}
+                    onValueChange={(value) => setRole(value as "mahasiswa" | "dosen")}
+                    buttons={[
+                      { value: "mahasiswa", label: "Mahasiswa", icon: "school-outline" },
+                      { value: "dosen", label: "Dosen", icon: "briefcase-outline" },
+                    ]}
+                  />
+                </>
+              )}
 
-            <View style={[styles.inputWrapper, emailFocused && styles.inputWrapperFocused]}>
-              <Ionicons name="mail-outline" size={18} color={emailFocused ? colors.primary : colors.mutedForeground} style={styles.inputIcon} />
+              <Text style={styles.inputLabel}>Email</Text>
               <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor={colors.mutedForeground}
+                mode="outlined"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
-                onFocus={() => setEmailFocused(true)}
-                onBlur={() => setEmailFocused(false)}
+                placeholder="nama@email.com"
+                left={<TextInput.Icon icon="email-outline" />}
               />
-            </View>
 
-            <View style={[styles.inputWrapper, passwordFocused && styles.inputWrapperFocused]}>
-              <Ionicons name="lock-closed-outline" size={18} color={passwordFocused ? colors.primary : colors.mutedForeground} style={styles.inputIcon} />
+              <Text style={styles.inputLabel}>Password</Text>
               <TextInput
-                style={styles.input}
-                placeholder="Password"
-                placeholderTextColor={colors.mutedForeground}
+                mode="outlined"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
-                onFocus={() => setPasswordFocused(true)}
-                onBlur={() => setPasswordFocused(false)}
+                placeholder="Minimal 6 karakter"
+                left={<TextInput.Icon icon="lock-outline" />}
+                right={
+                  <TextInput.Icon
+                    icon={showPassword ? "eye-off-outline" : "eye-outline"}
+                    onPress={() => setShowPassword((prev) => !prev)}
+                  />
+                }
               />
-              <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={8}>
-                <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={18} color={colors.mutedForeground} />
-              </Pressable>
-            </View>
 
-            {error ? (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            ) : null}
+              <HelperText type="error" visible={!!error}>
+                {error}
+              </HelperText>
 
-            <Pressable
-              style={[styles.submitBtn, isLoading && styles.submitBtnDisabled]}
-              onPress={handleSubmit}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color={colors.primaryForeground} />
-              ) : (
-                <Text style={styles.submitBtnText}>{isRegister ? "Daftar Sekarang" : "Masuk"}</Text>
-              )}
-            </Pressable>
-          </View>
+              <Button
+                mode="contained"
+                style={styles.submitBtn}
+                contentStyle={{ height: 48 }}
+                labelStyle={{ fontFamily: fonts.extraBold, fontSize: 15 }}
+                onPress={handleSubmit}
+                disabled={isLoading}
+                icon={isRegister ? "account-plus-outline" : "login"}
+              >
+                {isLoading ? "Memproses..." : isRegister ? "Daftar Sekarang" : "Masuk"}
+              </Button>
 
-          <View style={styles.switchRow}>
-            <Text style={styles.switchText}>{isRegister ? "Sudah punya akun?" : "Belum punya akun?"}</Text>
-            <Pressable onPress={() => { setIsRegister(!isRegister); setError(""); }}>
-              <Text style={styles.switchLink}>{isRegister ? "Masuk" : "Daftar"}</Text>
-            </Pressable>
-          </View>
+              {isLoading && <ActivityIndicator color={colors.primary} style={{ marginTop: 6 }} />}
+
+              <Button
+                mode="text"
+                compact
+                style={styles.switchBtn}
+                labelStyle={{ fontFamily: fonts.bold }}
+                onPress={() => {
+                  setIsRegister((prev) => !prev);
+                  setError("");
+                }}
+              >
+                {isRegister ? "Sudah punya akun? Masuk" : "Belum punya akun? Daftar"}
+              </Button>
+            </Card.Content>
+          </Card>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

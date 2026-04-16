@@ -30,23 +30,26 @@ export default function TabLayout() {
           fontSize: 11,
         },
         tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopWidth: 1,
-          borderTopColor: colors.border,
+          backgroundColor: "#FFFDFB",
+          borderTopWidth: 0,
           elevation: isAndroid ? 12 : 0,
-          height: Platform.OS === "web" ? 88 : 64,
-          paddingBottom: Platform.OS === "web" ? 18 : 8,
+          height: Platform.OS === "web" ? 84 : 68,
+          paddingBottom: Platform.OS === "web" ? 16 : 10,
           paddingTop: 6,
+          marginHorizontal: 12,
+          marginBottom: 8,
+          borderRadius: 20,
+          position: "absolute",
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.06,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.12,
           shadowRadius: 12,
         },
         tabBarBackground: () => (
           <View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: colors.card },
+              { backgroundColor: "#FFFDFB", borderRadius: 20 },
             ]}
           />
         ),
