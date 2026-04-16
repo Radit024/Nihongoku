@@ -10,6 +10,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Redirect, Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
+import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -23,10 +24,20 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   return (
-    <Stack>
-      <Stack.Screen name="login" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="quiz" options={{ headerShown: false }} />
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: Platform.select({
+          ios: "slide_from_right",
+          android: "fade_from_bottom",
+          default: "fade",
+        }),
+        fullScreenGestureEnabled: true,
+      }}
+    >
+      <Stack.Screen name="login" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="quiz" />
       <Stack.Screen name="+not-found" />
     </Stack>
   );
@@ -43,10 +54,11 @@ function AuthGate() {
     const inTabsGroup = segments[0] === "(tabs)";
     const onLogin = segments[0] === "login";
     const inQuiz = segments[0] === "quiz";
+    const atRoot = segments[0] == null;
 
     if (!user && (inTabsGroup || inQuiz)) {
       router.replace("/login");
-    } else if (user && (onLogin || segments.length === 0)) {
+    } else if (user && (onLogin || atRoot)) {
       router.replace("/(tabs)");
     }
   }, [user, segments, isLoading]);

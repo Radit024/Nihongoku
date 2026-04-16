@@ -8,6 +8,7 @@ export const usersTable = pgTable("users", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   role: varchar("role", { length: 20 }).notNull().default("mahasiswa"),
+  classCode: varchar("class_code", { length: 24 }),
   xp: integer("xp").notNull().default(0),
   streak: integer("streak").notNull().default(0),
   lastActiveDate: varchar("last_active_date", { length: 10 }),

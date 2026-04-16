@@ -2,7 +2,7 @@ import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { db } from "@workspace/db";
 import { quizAttemptsTable, quizQuestionsTable, usersTable, materialsTable } from "@workspace/db";
-import { eq, and, desc, count, sql } from "drizzle-orm";
+import { eq, desc, count } from "drizzle-orm";
 
 const router = Router();
 
@@ -23,6 +23,23 @@ router.post("/quizzes/:materialId/submit", async (req, res) => {
 
     if (!answers || !Array.isArray(answers)) {
       res.status(400).json({ error: "Answers wajib dikirim sebagai array" });
+      return;
+    }
+
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!user) {
+      res.status(404).json({ error: "User tidak ditemukan" });
+      return;
+    }
+
+    const [material] = await db.select().from(materialsTable).where(eq(materialsTable.id, materialId)).limit(1);
+    if (!material) {
+      res.status(404).json({ error: "Materi tidak ditemukan" });
+      return;
+    }
+
+    if (!user.classCode || material.classCode !== user.classCode) {
+      res.status(403).json({ error: "Anda tidak memiliki akses ke kuis ini" });
       return;
     }
 
@@ -70,7 +87,6 @@ router.post("/quizzes/:materialId/submit", async (req, res) => {
     });
 
     const today = new Date().toISOString().slice(0, 10);
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
     if (user) {
       let newStreak = user.streak;
       if (user.lastActiveDate !== today) {
@@ -155,6 +171,25 @@ router.get("/progress", async (req, res) => {
       .from(quizAttemptsTable)
       .where(eq(quizAttemptsTable.userId, userId));
 
+    if (!user.classCode) {
+      res.json({
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          classCode: user.classCode,
+          xp: user.xp,
+          streak: user.streak,
+        },
+        totalQuizzes: allAttempts.length,
+        passedQuizzes: allAttempts.filter(a => a.passed).length,
+        uniqueMaterialsPassed: new Set(allAttempts.filter(a => a.passed).map(a => a.materialId)).size,
+        categoryProgress: [],
+      });
+      return;
+    }
+
     const totalQuizzes = allAttempts.length;
     const passedQuizzes = allAttempts.filter(a => a.passed).length;
     const uniqueMaterialsPassed = new Set(allAttempts.filter(a => a.passed).map(a => a.materialId)).size;
@@ -165,6 +200,7 @@ router.get("/progress", async (req, res) => {
         totalMaterials: count(materialsTable.id),
       })
       .from(materialsTable)
+      .where(eq(materialsTable.classCode, user.classCode))
       .groupBy(materialsTable.category);
 
     const passedByCategory: Record<string, number> = {};
@@ -190,6 +226,7 @@ router.get("/progress", async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        classCode: user.classCode,
         xp: user.xp,
         streak: user.streak,
       },

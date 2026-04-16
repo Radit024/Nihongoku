@@ -54,6 +54,10 @@ router.post("/materials/upload", upload.single("file"), async (req, res) => {
       res.status(403).json({ error: "Hanya dosen yang dapat mengunggah materi" });
       return;
     }
+    if (!user.classCode) {
+      res.status(400).json({ error: "Buat kode kelas terlebih dulu sebelum upload materi" });
+      return;
+    }
 
     const file = req.file;
     if (!file) {
@@ -96,6 +100,7 @@ router.post("/materials/upload", upload.single("file"), async (req, res) => {
       id: materialId,
       title: parsed.title || "Materi Tanpa Judul",
       category: parsed.category || "Tata Bahasa",
+      classCode: user.classCode,
       description: parsed.description || "",
       lessonContent: parsed.lessonContent || "",
       questionCount: (parsed.questions || []).length,
@@ -120,6 +125,7 @@ router.post("/materials/upload", upload.single("file"), async (req, res) => {
       id: material.id,
       title: material.title,
       category: material.category,
+      classCode: material.classCode,
       description: material.description,
       questionCount: questions.length,
     });
@@ -131,17 +137,36 @@ router.post("/materials/upload", upload.single("file"), async (req, res) => {
 
 router.get("/materials", async (req, res) => {
   try {
+    const userId = req.headers["x-user-id"] as string;
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!user) {
+      res.status(404).json({ error: "User tidak ditemukan" });
+      return;
+    }
+
+    if (!user.classCode) {
+      res.json([]);
+      return;
+    }
+
     const materials = await db
       .select({
         id: materialsTable.id,
         title: materialsTable.title,
         category: materialsTable.category,
+        classCode: materialsTable.classCode,
         description: materialsTable.description,
         questionCount: materialsTable.questionCount,
         createdById: materialsTable.createdById,
         createdAt: materialsTable.createdAt,
       })
       .from(materialsTable)
+      .where(eq(materialsTable.classCode, user.classCode))
       .orderBy(desc(materialsTable.createdAt));
 
     res.json(materials);
@@ -153,11 +178,28 @@ router.get("/materials", async (req, res) => {
 
 router.get("/materials/:id", async (req, res) => {
   try {
+    const userId = req.headers["x-user-id"] as string;
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!user) {
+      res.status(404).json({ error: "User tidak ditemukan" });
+      return;
+    }
+
     const { id } = req.params;
 
     const [material] = await db.select().from(materialsTable).where(eq(materialsTable.id, id)).limit(1);
     if (!material) {
       res.status(404).json({ error: "Materi tidak ditemukan" });
+      return;
+    }
+
+    if (!user.classCode || material.classCode !== user.classCode) {
+      res.status(403).json({ error: "Anda tidak memiliki akses ke materi ini" });
       return;
     }
 
@@ -194,9 +236,20 @@ router.delete("/materials/:id", async (req, res) => {
 
     const { id } = req.params;
     const [material] = await db.select().from(materialsTable).where(eq(materialsTable.id, id)).limit(1);
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+
+    if (!user) {
+      res.status(404).json({ error: "User tidak ditemukan" });
+      return;
+    }
 
     if (!material) {
       res.status(404).json({ error: "Materi tidak ditemukan" });
+      return;
+    }
+
+    if (!user.classCode || material.classCode !== user.classCode) {
+      res.status(403).json({ error: "Anda tidak memiliki akses untuk menghapus materi ini" });
       return;
     }
 

@@ -2,8 +2,14 @@ import { Stack } from "expo-router";
 
 export default function QuizLayout() {
   return (
-    <Stack>
-      <Stack.Screen name="[id]" options={{ headerShown: false, animation: "slide_from_right" }} />
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: "slide_from_right",
+        gestureEnabled: true,
+      }}
+    >
+      <Stack.Screen name="[id]" />
     </Stack>
   );
 }

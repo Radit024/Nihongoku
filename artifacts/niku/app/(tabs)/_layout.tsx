@@ -17,8 +17,12 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      detachInactiveScreens
       screenOptions={{
         headerShown: false,
+        animation: "fade",
+        lazy: true,
+        freezeOnBlur: true,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
         tabBarLabelStyle: {

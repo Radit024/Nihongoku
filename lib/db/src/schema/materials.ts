@@ -7,6 +7,7 @@ export const materialsTable = pgTable("materials", {
   id: text("id").primaryKey(),
   title: varchar("title", { length: 500 }).notNull(),
   category: varchar("category", { length: 100 }).notNull(),
+  classCode: varchar("class_code", { length: 24 }).notNull(),
   description: text("description").notNull().default(""),
   lessonContent: text("lesson_content").notNull(),
   questionCount: integer("question_count").notNull().default(10),

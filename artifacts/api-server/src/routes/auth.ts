@@ -9,7 +9,7 @@ const router = Router();
 
 router.post("/auth/register", async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, classCode } = req.body;
 
     if (!name || !email || !password) {
       res.status(400).json({ error: "Name, email, dan password wajib diisi" });
@@ -17,6 +17,9 @@ router.post("/auth/register", async (req, res) => {
     }
 
     const validRole = role === "dosen" ? "dosen" : "mahasiswa";
+    const normalizedClassCode = typeof classCode === "string" && classCode.trim()
+      ? classCode.trim().toUpperCase()
+      : null;
 
     const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
     if (existing.length > 0) {
@@ -33,6 +36,7 @@ router.post("/auth/register", async (req, res) => {
       email,
       passwordHash,
       role: validRole,
+      classCode: normalizedClassCode,
     }).returning();
 
     res.status(201).json({
@@ -40,6 +44,7 @@ router.post("/auth/register", async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      classCode: user.classCode,
       xp: user.xp,
       streak: user.streak,
     });
@@ -89,6 +94,7 @@ router.post("/auth/login", async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      classCode: user.classCode,
       xp: user.xp,
       streak: newStreak,
     });
@@ -148,6 +154,7 @@ router.patch("/auth/profile", async (req, res) => {
       name: updated.name,
       email: updated.email,
       role: updated.role,
+      classCode: updated.classCode,
       xp: updated.xp,
       streak: updated.streak,
     });

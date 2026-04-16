@@ -38,8 +38,8 @@ export default function QuizScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
-    api.getMaterial(id)
+    if (!id || !user) return;
+    api.getMaterial(user.id, id)
       .then(m => {
         setMaterial(m);
         setLoading(false);
@@ -48,7 +48,7 @@ export default function QuizScreen() {
         setError(err.message);
         setLoading(false);
       });
-  }, [id]);
+  }, [id, user]);
 
   const questions = material?.questions ?? [];
   const question = questions[currentQ];

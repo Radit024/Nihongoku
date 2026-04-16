@@ -29,7 +29,18 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function ProgressScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { user, materials, progressData, refreshProgress, refreshMaterials, getLevelInfo, logout, updateProfile } = useAppContext();
+  const {
+    user,
+    materials,
+    progressData,
+    refreshProgress,
+    refreshMaterials,
+    getLevelInfo,
+    logout,
+    updateProfile,
+    createClassroom,
+    joinClassroom,
+  } = useAppContext();
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [editName, setEditName] = useState("");
@@ -38,6 +49,8 @@ export default function ProgressScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [editLoading, setEditLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [classCodeInput, setClassCodeInput] = useState("");
+  const [classActionLoading, setClassActionLoading] = useState(false);
 
   useEffect(() => {
     refreshProgress();
@@ -94,6 +107,38 @@ export default function ProgressScreen() {
       Alert.alert("Gagal", err.message || "Terjadi kesalahan");
     } finally {
       setEditLoading(false);
+    }
+  };
+
+  const handleCreateClassCode = async () => {
+    setClassActionLoading(true);
+    try {
+      const code = await createClassroom();
+      await Promise.all([refreshProgress(), refreshMaterials()]);
+      Alert.alert("Kode Kelas Siap", `Kode kelas kamu: ${code}`);
+    } catch (err: any) {
+      Alert.alert("Gagal", err.message || "Tidak bisa membuat kode kelas");
+    } finally {
+      setClassActionLoading(false);
+    }
+  };
+
+  const handleJoinClassroom = async () => {
+    if (!classCodeInput.trim()) {
+      Alert.alert("Info", "Masukkan kode kelas terlebih dahulu");
+      return;
+    }
+
+    setClassActionLoading(true);
+    try {
+      const code = await joinClassroom(classCodeInput.trim());
+      await Promise.all([refreshProgress(), refreshMaterials()]);
+      setClassCodeInput("");
+      Alert.alert("Berhasil", `Kamu bergabung ke kelas ${code}`);
+    } catch (err: any) {
+      Alert.alert("Gagal", err.message || "Tidak bisa bergabung kelas");
+    } finally {
+      setClassActionLoading(false);
     }
   };
 
@@ -248,6 +293,79 @@ export default function ProgressScreen() {
       fontFamily: fonts.extraBold,
       color: colors.foreground,
       marginBottom: 14,
+    },
+    classCard: {
+      backgroundColor: colors.card,
+      borderRadius: 18,
+      padding: 16,
+      marginBottom: 14,
+      borderWidth: 1,
+      borderColor: colors.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 6,
+      elevation: 2,
+      gap: 10,
+    },
+    classTitleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    classTitle: {
+      fontSize: 14,
+      fontFamily: fonts.extraBold,
+      color: colors.foreground,
+    },
+    classCodePill: {
+      borderRadius: 99,
+      paddingHorizontal: 12,
+      paddingVertical: 5,
+      backgroundColor: "#FFF3F3",
+      alignSelf: "flex-start",
+    },
+    classCodeText: {
+      fontSize: 13,
+      fontFamily: fonts.black,
+      color: colors.primary,
+      letterSpacing: 0.4,
+    },
+    classHint: {
+      fontSize: 12,
+      fontFamily: fonts.semiBold,
+      color: colors.mutedForeground,
+    },
+    classInputRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    classInput: {
+      flex: 1,
+      backgroundColor: colors.background,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      fontFamily: fonts.semiBold,
+      color: colors.foreground,
+      fontSize: 13,
+    },
+    classActionBtn: {
+      borderRadius: 12,
+      backgroundColor: colors.primary,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      minWidth: 92,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    classActionText: {
+      color: colors.primaryForeground,
+      fontFamily: fonts.bold,
+      fontSize: 13,
     },
     catCard: {
       backgroundColor: colors.card,
@@ -407,6 +525,34 @@ export default function ProgressScreen() {
 
   const renderDosenBody = () => (
     <View style={styles.body}>
+      <View style={styles.classCard}>
+        <View style={styles.classTitleRow}>
+          <Text style={styles.classTitle}>Kelas Aktif</Text>
+          <Ionicons name="school-outline" size={18} color={colors.primary} />
+        </View>
+        {user?.classCode ? (
+          <>
+            <View style={styles.classCodePill}>
+              <Text style={styles.classCodeText}>{user.classCode}</Text>
+            </View>
+            <Text style={styles.classHint}>Bagikan kode ini ke mahasiswa agar mereka hanya melihat materi kelas kamu.</Text>
+          </>
+        ) : (
+          <Text style={styles.classHint}>Belum ada kode kelas. Buat kode kelas sebelum upload materi agar konten tidak tercampur.</Text>
+        )}
+        <Pressable
+          style={[styles.classActionBtn, classActionLoading && { opacity: 0.7 }]}
+          onPress={handleCreateClassCode}
+          disabled={classActionLoading}
+        >
+          {classActionLoading ? (
+            <ActivityIndicator color={colors.primaryForeground} size="small" />
+          ) : (
+            <Text style={styles.classActionText}>{user?.classCode ? "Lihat/Ulangi" : "Buat Kode"}</Text>
+          )}
+        </Pressable>
+      </View>
+
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
           <View style={[styles.statIcon, { backgroundColor: "#FFF0F0" }]}>
@@ -462,6 +608,46 @@ export default function ProgressScreen() {
 
   const renderMahasiswaBody = () => (
     <View style={styles.body}>
+      <View style={styles.classCard}>
+        <View style={styles.classTitleRow}>
+          <Text style={styles.classTitle}>Kelas Saya</Text>
+          <Ionicons name="people-outline" size={18} color={colors.primary} />
+        </View>
+        {user?.classCode ? (
+          <>
+            <View style={styles.classCodePill}>
+              <Text style={styles.classCodeText}>{user.classCode}</Text>
+            </View>
+            <Text style={styles.classHint}>Materi yang tampil hanya dari kelas ini.</Text>
+          </>
+        ) : (
+          <>
+            <Text style={styles.classHint}>Masukkan kode kelas dari dosen untuk membuka materi yang sesuai.</Text>
+            <View style={styles.classInputRow}>
+              <TextInput
+                style={styles.classInput}
+                value={classCodeInput}
+                onChangeText={setClassCodeInput}
+                placeholder="Contoh: NIKU-AB12CD"
+                placeholderTextColor={colors.mutedForeground}
+                autoCapitalize="characters"
+              />
+              <Pressable
+                style={[styles.classActionBtn, classActionLoading && { opacity: 0.7 }]}
+                onPress={handleJoinClassroom}
+                disabled={classActionLoading}
+              >
+                {classActionLoading ? (
+                  <ActivityIndicator color={colors.primaryForeground} size="small" />
+                ) : (
+                  <Text style={styles.classActionText}>Gabung</Text>
+                )}
+              </Pressable>
+            </View>
+          </>
+        )}
+      </View>
+
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
           <View style={[styles.statIcon, { backgroundColor: "#FFF0F0" }]}>

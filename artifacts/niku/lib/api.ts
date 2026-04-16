@@ -1,15 +1,52 @@
-const DEV_DOMAIN = process.env.EXPO_PUBLIC_DOMAIN || "";
-const API_PREFIX = `https://${DEV_DOMAIN}/api`;
+import { Platform } from "react-native";
+
+function stripTrailingSlash(value: string): string {
+  return value.replace(/\/+$/, "");
+}
+
+function resolveApiPrefix(): string {
+  const rawApiUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
+  if (rawApiUrl) {
+    return stripTrailingSlash(rawApiUrl);
+  }
+
+  const rawDomain = process.env.EXPO_PUBLIC_DOMAIN?.trim();
+  const hasValidDomain =
+    !!rawDomain && rawDomain !== "your-https-domain.example.com";
+
+  if (hasValidDomain) {
+    return `https://${rawDomain}/api`;
+  }
+
+  // Fallback for local debugging when env domain is not configured.
+  if (Platform.OS === "android") {
+    return "http://10.0.2.2:8080/api";
+  }
+
+  return "http://localhost:8080/api";
+}
+
+const API_PREFIX = resolveApiPrefix();
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_PREFIX}${path}`;
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
+  let res: Response;
+
+  try {
+    res = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Network request failed. Cannot reach API at ${API_PREFIX}. ${reason}`,
+    );
+  }
+
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: "Request failed" }));
     throw new Error(body.error || `HTTP ${res.status}`);
@@ -22,6 +59,7 @@ export interface ApiUser {
   name: string;
   email: string;
   role: "dosen" | "mahasiswa";
+  classCode: string | null;
   xp: number;
   streak: number;
 }
@@ -30,6 +68,7 @@ export interface ApiMaterial {
   id: string;
   title: string;
   category: string;
+  classCode: string;
   description: string;
   questionCount: number;
   createdById: string;
@@ -84,8 +123,13 @@ export interface ProgressData {
   categoryProgress: { category: string; total: number; completed: number }[];
 }
 
+export interface ClassroomState {
+  role: "dosen" | "mahasiswa";
+  classCode: string | null;
+}
+
 export const api = {
-  register(data: { name: string; email: string; password: string; role: string }): Promise<ApiUser> {
+  register(data: { name: string; email: string; password: string; role: string; classCode?: string }): Promise<ApiUser> {
     return request("/auth/register", { method: "POST", body: JSON.stringify(data) });
   },
 
@@ -93,12 +137,12 @@ export const api = {
     return request("/auth/login", { method: "POST", body: JSON.stringify(data) });
   },
 
-  getMaterials(): Promise<ApiMaterial[]> {
-    return request("/materials");
+  getMaterials(userId: string): Promise<ApiMaterial[]> {
+    return request("/materials", { headers: { "x-user-id": userId } });
   },
 
-  getMaterial(id: string): Promise<ApiMaterial> {
-    return request(`/materials/${id}`);
+  getMaterial(userId: string, id: string): Promise<ApiMaterial> {
+    return request(`/materials/${id}`, { headers: { "x-user-id": userId } });
   },
 
   uploadMaterial(userId: string, file: { uri: string; name: string; type: string }): Promise<ApiMaterial> {
@@ -151,6 +195,27 @@ export const api = {
       method: "PATCH",
       headers: { "x-user-id": userId },
       body: JSON.stringify(data),
+    });
+  },
+
+  getClassroomState(userId: string): Promise<ClassroomState> {
+    return request("/classroom/me", {
+      headers: { "x-user-id": userId },
+    });
+  },
+
+  createClassroom(userId: string): Promise<{ classCode: string }> {
+    return request("/classroom/create", {
+      method: "POST",
+      headers: { "x-user-id": userId },
+    });
+  },
+
+  joinClassroom(userId: string, classCode: string): Promise<{ classCode: string }> {
+    return request("/classroom/join", {
+      method: "POST",
+      headers: { "x-user-id": userId },
+      body: JSON.stringify({ classCode }),
     });
   },
 };

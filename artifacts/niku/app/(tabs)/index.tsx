@@ -33,6 +33,8 @@ export default function BerandaScreen() {
   }, []);
 
   const firstName = user?.name.split(" ")[0] || "Gakusei";
+  const fullName = user?.name || "Gakusei";
+  const userInitial = fullName.charAt(0).toUpperCase();
   const xp = progressData?.user.xp ?? user?.xp ?? 0;
   const streak = progressData?.user.streak ?? user?.streak ?? 0;
   const levelInfo = getLevelInfo();
@@ -51,17 +53,69 @@ export default function BerandaScreen() {
   });
   const activeCategories = CATEGORIES.filter(c => categoryCounts[c.key]);
 
-  const topPad = insets.top + (Platform.OS === "web" ? 67 : 0);
+  const topPad = insets.top + (Platform.OS === "web" ? 67 : 6);
 
   const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     header: {
-      paddingTop: topPad + 20,
+      paddingTop: topPad + 10,
       paddingHorizontal: 20,
-      paddingBottom: 28,
+      paddingBottom: 22,
       backgroundColor: colors.primary,
       borderBottomLeftRadius: 32,
       borderBottomRightRadius: 32,
+    },
+    headerUserRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: 14,
+    },
+    headerUserLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      flex: 1,
+      minWidth: 0,
+    },
+    avatarCircle: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.6)",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(255,255,255,0.18)",
+    },
+    avatarInitial: {
+      fontSize: 14,
+      fontFamily: fonts.extraBold,
+      color: colors.primaryForeground,
+    },
+    headerUserInfo: {
+      flex: 1,
+      minWidth: 0,
+    },
+    headerUserName: {
+      fontSize: 17,
+      fontFamily: fonts.extraBold,
+      color: colors.primaryForeground,
+    },
+    headerUserMeta: {
+      fontSize: 11,
+      fontFamily: fonts.semiBold,
+      color: colors.primaryForeground,
+      opacity: 0.82,
+      marginTop: 2,
+    },
+    headerActionBtn: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "rgba(255,255,255,0.18)",
     },
     greetRow: {
       flexDirection: "row",
@@ -108,7 +162,7 @@ export default function BerandaScreen() {
       color: colors.primaryForeground,
     },
     xpRow: {
-      marginTop: 18,
+      marginTop: 2,
     },
     xpLabelRow: {
       flexDirection: "row",
@@ -123,19 +177,64 @@ export default function BerandaScreen() {
       opacity: 0.8,
     },
     xpVal: {
-      fontSize: 13,
+      fontSize: 12,
       fontFamily: fonts.extraBold,
       color: colors.primaryForeground,
     },
     xpBar: {
-      height: 8,
+      height: 7,
       backgroundColor: "rgba(255,255,255,0.25)",
-      borderRadius: 4,
+      borderRadius: 999,
     },
     xpFill: {
-      height: 8,
-      borderRadius: 4,
+      height: 7,
+      borderRadius: 999,
       backgroundColor: colors.primaryForeground,
+    },
+    mahasiswaStatsWrap: {
+      paddingHorizontal: 12,
+      marginTop: -10,
+      marginBottom: 10,
+    },
+    mahasiswaStatsRow: {
+      flexDirection: "row",
+      gap: 8,
+      justifyContent: "space-between",
+    },
+    mahasiswaStatCard: {
+      flex: 1,
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingVertical: 10,
+      paddingHorizontal: 8,
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    mahasiswaStatIcon: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 7,
+    },
+    mahasiswaStatVal: {
+      fontSize: 19,
+      lineHeight: 21,
+      fontFamily: fonts.black,
+      color: colors.foreground,
+    },
+    mahasiswaStatLabel: {
+      fontSize: 10,
+      fontFamily: fonts.semiBold,
+      color: colors.mutedForeground,
+      marginTop: 2,
     },
     statsRow: {
       flexDirection: "row",
@@ -167,7 +266,7 @@ export default function BerandaScreen() {
       fontFamily: fonts.extraBold,
       color: colors.foreground,
       marginBottom: 14,
-      marginTop: 4,
+      marginTop: 2,
     },
     categoryGrid: {
       flexDirection: "row",
@@ -291,39 +390,28 @@ export default function BerandaScreen() {
 
   const renderMahasiswaHeader = () => (
     <View style={styles.header}>
-      <View style={styles.greetRow}>
-        <View>
-          <Text style={styles.greeting}>Konnichiwa,</Text>
-          <Text style={styles.headerName}>{firstName}</Text>
+      <View style={styles.headerUserRow}>
+        <View style={styles.headerUserLeft}>
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarInitial}>{userInitial}</Text>
+          </View>
+          <View style={styles.headerUserInfo}>
+            <Text numberOfLines={1} style={styles.headerUserName}>{fullName}</Text>
+            <Text style={styles.headerUserMeta}>Mahasiswa · Lv.{levelInfo.level} {levelInfo.title}</Text>
+          </View>
         </View>
-        <View style={styles.streakBadge}>
-          <Ionicons name="flame" size={16} color="#FCD34D" />
-          <Text style={styles.streakText}>{streak}</Text>
-        </View>
+        <Pressable style={styles.headerActionBtn} onPress={() => router.push("/(tabs)/progress")}>
+          <Ionicons name="create-outline" size={14} color={colors.primaryForeground} />
+        </Pressable>
       </View>
 
       <View style={styles.xpRow}>
         <View style={styles.xpLabelRow}>
-          <Text style={styles.xpLabel}>Lv.{levelInfo.level} {levelInfo.title}</Text>
-          <Text style={styles.xpVal}>{xp} XP</Text>
+          <Text style={styles.xpLabel}>Progress Lv.{levelInfo.level + 1}</Text>
+          <Text style={styles.xpVal}>{xp} XP · {xpPct}%</Text>
         </View>
         <View style={styles.xpBar}>
           <View style={[styles.xpFill, { width: `${xpPct}%` }]} />
-        </View>
-      </View>
-
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statVal}>{xp}</Text>
-          <Text style={styles.statLabel}>Total XP</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statVal}>{materials.length}</Text>
-          <Text style={styles.statLabel}>Materi</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statVal}>{progressData?.passedQuizzes ?? 0}</Text>
-          <Text style={styles.statLabel}>Lulus</Text>
         </View>
       </View>
     </View>
@@ -338,8 +426,43 @@ export default function BerandaScreen() {
         <>
           {isDosen ? renderDosenHeader() : renderMahasiswaHeader()}
 
+          {!isDosen && (
+            <View style={styles.mahasiswaStatsWrap}>
+              <View style={styles.mahasiswaStatsRow}>
+                <View style={styles.mahasiswaStatCard}>
+                  <View style={[styles.mahasiswaStatIcon, { backgroundColor: "#FFF3F3" }]}>
+                    <Ionicons name="flash" size={13} color={colors.primary} />
+                  </View>
+                  <Text style={styles.mahasiswaStatVal}>{xp}</Text>
+                  <Text style={styles.mahasiswaStatLabel}>Total XP</Text>
+                </View>
+                <View style={styles.mahasiswaStatCard}>
+                  <View style={[styles.mahasiswaStatIcon, { backgroundColor: "#FFF8E9" }]}>
+                    <Ionicons name="flame" size={13} color="#D97706" />
+                  </View>
+                  <Text style={styles.mahasiswaStatVal}>{streak}</Text>
+                  <Text style={styles.mahasiswaStatLabel}>Streak</Text>
+                </View>
+                <View style={styles.mahasiswaStatCard}>
+                  <View style={[styles.mahasiswaStatIcon, { backgroundColor: "#ECFDF5" }]}>
+                    <Ionicons name="trophy" size={13} color="#059669" />
+                  </View>
+                  <Text style={styles.mahasiswaStatVal}>{progressData?.passedQuizzes ?? 0}</Text>
+                  <Text style={styles.mahasiswaStatLabel}>Kuis Lulus</Text>
+                </View>
+                <View style={styles.mahasiswaStatCard}>
+                  <View style={[styles.mahasiswaStatIcon, { backgroundColor: "#EFF6FF" }]}>
+                    <Ionicons name="document-text" size={13} color="#2563EB" />
+                  </View>
+                  <Text style={styles.mahasiswaStatVal}>{progressData?.totalQuizzes ?? 0}</Text>
+                  <Text style={styles.mahasiswaStatLabel}>Total Kuis</Text>
+                </View>
+              </View>
+            </View>
+          )}
+
           <View style={styles.body}>
-            <Text style={styles.sectionTitle}>Kategori Materi</Text>
+            <Text style={styles.sectionTitle}>{isDosen ? "Kategori Materi" : "Progress Kategori"}</Text>
             {activeCategories.length > 0 ? (
               <View style={styles.categoryGrid}>
                 {activeCategories.map((cat) => (

@@ -14,6 +14,8 @@ export interface AppContextType {
   register: (name: string, email: string, password: string, role: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: { name?: string; currentPassword?: string; newPassword?: string }) => Promise<void>;
+  createClassroom: () => Promise<string>;
+  joinClassroom: (classCode: string) => Promise<string>;
   refreshMaterials: () => Promise<void>;
   refreshProgress: () => Promise<void>;
   refreshQuizHistory: () => Promise<void>;
@@ -84,18 +86,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const refreshMaterials = useCallback(async () => {
+    if (!user) return;
     try {
-      const data = await api.getMaterials();
+      const data = await api.getMaterials(user.id);
       setMaterials(data);
     } catch {
     }
-  }, []);
+  }, [user]);
 
   const refreshProgress = useCallback(async () => {
     if (!user) return;
     try {
       const data = await api.getProgress(user.id);
       setUser(data.user);
+      saveUser(data.user).catch(() => {});
       setProgressData(data);
     } catch {
     }
@@ -117,6 +121,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await saveUser(updated);
   }, [user]);
 
+  const createClassroom = useCallback(async () => {
+    if (!user) throw new Error("Not logged in");
+    const response = await api.createClassroom(user.id);
+    const nextUser: ApiUser = { ...user, classCode: response.classCode };
+    setUser(nextUser);
+    await saveUser(nextUser);
+    return response.classCode;
+  }, [user]);
+
+  const joinClassroom = useCallback(async (classCode: string) => {
+    if (!user) throw new Error("Not logged in");
+    const response = await api.joinClassroom(user.id, classCode);
+    const nextUser: ApiUser = { ...user, classCode: response.classCode };
+    setUser(nextUser);
+    await saveUser(nextUser);
+    return response.classCode;
+  }, [user]);
+
   const getLevelInfo = useCallback(() => {
     return getLevelFromXP(user?.xp ?? 0);
   }, [user?.xp]);
@@ -133,6 +155,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         updateProfile,
+        createClassroom,
+        joinClassroom,
         refreshMaterials,
         refreshProgress,
         refreshQuizHistory,
