@@ -2,7 +2,7 @@ import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { db } from "@workspace/db";
 import { quizAttemptsTable, quizQuestionsTable, usersTable, materialsTable } from "@workspace/db";
-import { eq, desc, count } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 
 const router = Router();
 
@@ -40,6 +40,11 @@ router.post("/quizzes/:materialId/submit", async (req, res) => {
 
     if (!user.classCode || material.classCode !== user.classCode) {
       res.status(403).json({ error: "Anda tidak memiliki akses ke kuis ini" });
+      return;
+    }
+
+    if (user.role === "mahasiswa" && !material.isPublished) {
+      res.status(403).json({ error: "Kuis ini belum dipublikasikan oleh sensei" });
       return;
     }
 
@@ -194,13 +199,17 @@ router.get("/progress", async (req, res) => {
     const passedQuizzes = allAttempts.filter(a => a.passed).length;
     const uniqueMaterialsPassed = new Set(allAttempts.filter(a => a.passed).map(a => a.materialId)).size;
 
+    const categoryStatsWhere = user.role === "mahasiswa"
+      ? and(eq(materialsTable.classCode, user.classCode), eq(materialsTable.isPublished, true))
+      : eq(materialsTable.classCode, user.classCode);
+
     const categoryStats = await db
       .select({
         category: materialsTable.category,
         totalMaterials: count(materialsTable.id),
       })
       .from(materialsTable)
-      .where(eq(materialsTable.classCode, user.classCode))
+      .where(categoryStatsWhere)
       .groupBy(materialsTable.category);
 
     const passedByCategory: Record<string, number> = {};

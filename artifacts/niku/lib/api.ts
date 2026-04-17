@@ -70,6 +70,9 @@ export interface ApiMaterial {
   category: string;
   classCode: string;
   description: string;
+  sourceFileName?: string;
+  sourceMimeType?: string;
+  isPublished?: boolean;
   questionCount: number;
   createdById: string;
   createdAt: string;
@@ -101,6 +104,13 @@ export interface QuizResult {
     isCorrect: boolean;
     explanation: string;
   }[];
+}
+
+export interface EditableQuizQuestionInput {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation?: string;
 }
 
 export interface QuizHistoryItem {
@@ -164,6 +174,30 @@ export const api = {
         throw new Error(body.error || `HTTP ${res.status}`);
       }
       return res.json();
+    });
+  },
+
+  updateMaterialQuestions(userId: string, materialId: string, questions: EditableQuizQuestionInput[]): Promise<{ id: string; questionCount: number; isPublished: boolean }> {
+    return request(`/materials/${materialId}/questions`, {
+      method: "PATCH",
+      headers: { "x-user-id": userId },
+      body: JSON.stringify({ questions }),
+    });
+  },
+
+  regenerateMaterialQuiz(userId: string, materialId: string): Promise<{ id: string; questionCount: number; isPublished: boolean }> {
+    return request(`/materials/${materialId}/regenerate-quiz`, {
+      method: "POST",
+      headers: { "x-user-id": userId },
+      body: JSON.stringify({}),
+    });
+  },
+
+  setMaterialPublishState(userId: string, materialId: string, published: boolean): Promise<{ id: string; isPublished: boolean }> {
+    return request(`/materials/${materialId}/publish`, {
+      method: "POST",
+      headers: { "x-user-id": userId },
+      body: JSON.stringify({ published }),
     });
   },
 

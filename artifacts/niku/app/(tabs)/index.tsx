@@ -497,7 +497,7 @@ export default function BerandaScreen() {
                 </View>
                 <View style={styles.ctaContent}>
                   <Text style={styles.ctaTitle}>Upload Materi Baru</Text>
-                  <Text style={styles.ctaSub}>PDF atau foto — AI buat soal otomatis</Text>
+                  <Text style={styles.ctaSub}>PDF/PPT/Word/foto - AI buat soal draft untuk direview</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.mutedForeground} />
               </Pressable>

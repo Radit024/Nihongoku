@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, varchar, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, varchar, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -10,6 +10,9 @@ export const materialsTable = pgTable("materials", {
   classCode: varchar("class_code", { length: 24 }).notNull(),
   description: text("description").notNull().default(""),
   lessonContent: text("lesson_content").notNull(),
+  sourceFileName: varchar("source_file_name", { length: 255 }).notNull().default(""),
+  sourceMimeType: varchar("source_mime_type", { length: 120 }).notNull().default("application/octet-stream"),
+  isPublished: boolean("is_published").notNull().default(false),
   questionCount: integer("question_count").notNull().default(10),
   createdById: text("created_by_id").notNull().references(() => usersTable.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
