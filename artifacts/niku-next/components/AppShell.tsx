@@ -3,51 +3,53 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
+import {
+  IoBook,
+  IoBookOutline,
+  IoCloudUpload,
+  IoCloudUploadOutline,
+  IoHome,
+  IoHomeOutline,
+  IoPersonCircle,
+  IoPersonCircleOutline,
+} from "react-icons/io5";
 import { useAppContext } from "@/context/AppContext";
 
 const DOSEN_NAV = [
-  { href: "/dashboard", label: "Beranda" },
-  { href: "/materi", label: "Materi" },
-  { href: "/upload", label: "Upload" },
-  { href: "/progress", label: "Profil" },
+  { href: "/dashboard", label: "Beranda", activeIcon: IoHome, icon: IoHomeOutline },
+  { href: "/kelas", label: "Kelas", activeIcon: IoBook, icon: IoBookOutline },
+  { href: "/upload", label: "Upload", activeIcon: IoCloudUpload, icon: IoCloudUploadOutline },
+  { href: "/progress", label: "Profil", activeIcon: IoPersonCircle, icon: IoPersonCircleOutline },
 ];
 
 const MAHASISWA_NAV = [
-  { href: "/dashboard", label: "Beranda" },
-  { href: "/materi", label: "Materi" },
-  { href: "/kuis", label: "Kuis" },
-  { href: "/progress", label: "Profil" },
+  { href: "/dashboard", label: "Beranda", activeIcon: IoHome, icon: IoHomeOutline },
+  { href: "/kelas", label: "Kelas", activeIcon: IoBook, icon: IoBookOutline },
+  { href: "/progress", label: "Profil", activeIcon: IoPersonCircle, icon: IoPersonCircleOutline },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, logout } = useAppContext();
-  const links = user?.role === "dosen" ? DOSEN_NAV : MAHASISWA_NAV;
+  const { user } = useAppContext();
+  const isDosen = user?.role === "dosen";
+  const links = isDosen ? DOSEN_NAV : MAHASISWA_NAV;
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <div>
-          <p className="topbar-sub">NIKU Web</p>
-          <h1 className="topbar-title">{user?.name ?? "Pengguna"}</h1>
-          <p className="topbar-meta">
-            {user?.role === "dosen" ? "Sensei" : "Mahasiswa"}
-            {user?.classCode ? ` - ${user.classCode}` : " - Belum gabung kelas"}
-          </p>
-        </div>
-        <button className="ghost-btn" onClick={logout} type="button">
-          Logout
-        </button>
-      </header>
-
       <main className="page-body">{children}</main>
 
-      <nav className="bottom-nav">
+      <nav
+        className="bottom-nav"
+        style={{ "--nav-count": links.length } as React.CSSProperties}
+      >
         {links.map((link) => {
           const active = pathname === link.href;
+          const Icon = active ? link.activeIcon : link.icon;
+
           return (
             <Link key={link.href} href={link.href} className={active ? "nav-link active" : "nav-link"}>
-              {link.label}
+              <Icon size={22} className="nav-icon" />
+              <span className="nav-label">{link.label}</span>
             </Link>
           );
         })}

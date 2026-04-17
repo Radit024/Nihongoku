@@ -2,6 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  IoBriefcaseOutline,
+  IoEyeOffOutline,
+  IoEyeOutline,
+  IoLockClosedOutline,
+  IoMailOutline,
+  IoPersonOutline,
+  IoSchoolOutline,
+} from "react-icons/io5";
 import { useAppContext } from "@/context/AppContext";
 
 export default function LoginPage() {
@@ -13,6 +22,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"mahasiswa" | "dosen">("mahasiswa");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -43,53 +53,100 @@ export default function LoginPage() {
 
   return (
     <main className="auth-page">
-      <section className="auth-card">
-        <p className="eyebrow">Nihongoku Web</p>
-        <h1>{mode === "login" ? "Masuk" : "Daftar"}</h1>
-        <p className="muted">Migrasi dari React Native ke Next.js + Capacitor</p>
+      <div className="auth-blob blob-one" />
+      <div className="auth-blob blob-two" />
+      <div className="auth-blob blob-three" />
 
-        <form className="stack" onSubmit={handleSubmit}>
-          {mode === "register" ? (
+      <section className="auth-mobile-shell">
+        <div className="auth-top-decoration">
+          <div className="logo-circle">に</div>
+          <h1>NIKU</h1>
+          <p className="eyebrow">Nihongoku</p>
+          <p className="muted">Belajar Bahasa Jepang dengan Mudah</p>
+        </div>
+
+        <article className="auth-card auth-mobile-card">
+          <h2>{mode === "login" ? "Masuk" : "Buat Akun"}</h2>
+
+          <form className="stack" onSubmit={handleSubmit}>
+            {mode === "register" ? (
+              <label>
+                Nama
+                <div className="field-shell">
+                  <span className="field-icon"><IoPersonOutline size={16} /></span>
+                  <input value={name} onChange={(e) => setName(e.target.value)} required />
+                </div>
+              </label>
+            ) : null}
+
+            {mode === "register" ? (
+              <div className="role-picker-row">
+                <button
+                  type="button"
+                  className={role === "mahasiswa" ? "role-pill active" : "role-pill"}
+                  onClick={() => setRole("mahasiswa")}
+                >
+                  <IoSchoolOutline size={16} />
+                  Mahasiswa
+                </button>
+                <button
+                  type="button"
+                  className={role === "dosen" ? "role-pill active" : "role-pill"}
+                  onClick={() => setRole("dosen")}
+                >
+                  <IoBriefcaseOutline size={16} />
+                  Dosen
+                </button>
+              </div>
+            ) : null}
+
             <label>
-              Nama
-              <input value={name} onChange={(e) => setName(e.target.value)} required />
+              Email
+              <div className="field-shell">
+                <span className="field-icon"><IoMailOutline size={16} /></span>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              </div>
             </label>
-          ) : null}
 
-          <label>
-            Email
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </label>
-
-          <label>
-            Password
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-          </label>
-
-          {mode === "register" ? (
             <label>
-              Role
-              <select value={role} onChange={(e) => setRole(e.target.value as "mahasiswa" | "dosen")}> 
-                <option value="mahasiswa">Mahasiswa</option>
-                <option value="dosen">Dosen</option>
-              </select>
+              Password
+              <div className="field-shell">
+                <span className="field-icon"><IoLockClosedOutline size={16} /></span>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                />
+                <button
+                  className="ghost-btn inline-btn"
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                >
+                  {showPassword ? <IoEyeOffOutline size={16} /> : <IoEyeOutline size={16} />}
+                </button>
+              </div>
             </label>
-          ) : null}
 
-          {error ? <p className="error-text">{error}</p> : null}
+            {error ? <p className="error-text error-box">{error}</p> : null}
 
-          <button type="submit" className="primary-btn" disabled={loading}>
-            {loading ? "Memproses..." : mode === "login" ? "Masuk" : "Daftar"}
+            <button type="submit" className="primary-btn" disabled={loading}>
+              {loading ? "Memproses..." : mode === "login" ? "Masuk" : "Daftar Sekarang"}
+            </button>
+          </form>
+
+          <button
+            type="button"
+            className="text-btn"
+            onClick={() => {
+              setError("");
+              setMode((prev) => (prev === "login" ? "register" : "login"));
+            }}
+          >
+            {mode === "login" ? "Belum punya akun? Daftar" : "Sudah punya akun? Masuk"}
           </button>
-        </form>
-
-        <button
-          type="button"
-          className="text-btn"
-          onClick={() => setMode((prev) => (prev === "login" ? "register" : "login"))}
-        >
-          {mode === "login" ? "Belum punya akun? Daftar" : "Sudah punya akun? Masuk"}
-        </button>
+        </article>
       </section>
     </main>
   );

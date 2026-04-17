@@ -9,7 +9,7 @@ import {
   QuizHistoryItem,
 } from "@/lib/api";
 
-const STORAGE_KEY = "niku_next_state_v1";
+const STORAGE_KEY = "niku_next_state_v2";
 
 type LevelInfo = {
   level: number;
@@ -67,7 +67,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const saveUser = useCallback((nextUser: ApiUser | null) => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: nextUser }));
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ user: nextUser }));
+    } catch {
+      // Ignore persistence failures on constrained environments.
+    }
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -87,27 +91,43 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setMaterials([]);
     setQuizHistory([]);
     setProgressData(null);
-    window.localStorage.removeItem(STORAGE_KEY);
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // Ignore persistence failures on constrained environments.
+    }
   }, []);
 
   const refreshMaterials = useCallback(async () => {
     if (!user) return;
-    const nextMaterials = await api.getMaterials(user.id);
-    setMaterials(nextMaterials);
+    try {
+      const nextMaterials = await api.getMaterials(user.id);
+      setMaterials(nextMaterials);
+    } catch {
+      // Screen-level components can still trigger manual retries.
+    }
   }, [user]);
 
   const refreshProgress = useCallback(async () => {
     if (!user) return;
-    const nextProgress = await api.getProgress(user.id);
-    setProgressData(nextProgress);
-    setUser(nextProgress.user);
-    saveUser(nextProgress.user);
+    try {
+      const nextProgress = await api.getProgress(user.id);
+      setProgressData(nextProgress);
+      setUser(nextProgress.user);
+      saveUser(nextProgress.user);
+    } catch {
+      // Screen-level components can still trigger manual retries.
+    }
   }, [saveUser, user]);
 
   const refreshQuizHistory = useCallback(async () => {
     if (!user) return;
-    const history = await api.getQuizHistory(user.id);
-    setQuizHistory(history);
+    try {
+      const history = await api.getQuizHistory(user.id);
+      setQuizHistory(history);
+    } catch {
+      // Screen-level components can still trigger manual retries.
+    }
   }, [user]);
 
   const updateProfile = useCallback(async (data: { name?: string; currentPassword?: string; newPassword?: string }) => {
