@@ -7,6 +7,12 @@ import { eq } from "drizzle-orm";
 
 const router = Router();
 
+function normalizeRole(role: unknown): "sensei" | "gakousei" {
+  const normalizedRole = typeof role === "string" ? role.trim().toLowerCase() : "";
+  if (normalizedRole === "sensei" || normalizedRole === "dosen") return "sensei";
+  return "gakousei";
+}
+
 router.post("/auth/register", async (req, res) => {
   try {
     const { name, email, password, role, classCode } = req.body;
@@ -16,7 +22,7 @@ router.post("/auth/register", async (req, res) => {
       return;
     }
 
-    const validRole = role === "dosen" ? "dosen" : "mahasiswa";
+    const validRole = normalizeRole(role);
     const normalizedClassCode = typeof classCode === "string" && classCode.trim()
       ? classCode.trim().toUpperCase()
       : null;
@@ -43,7 +49,9 @@ router.post("/auth/register", async (req, res) => {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role,
+      className: user.className,
+      avatarUrl: user.avatarUrl,
+      role: normalizeRole(user.role),
       classCode: user.classCode,
       xp: user.xp,
       streak: user.streak,
@@ -93,7 +101,9 @@ router.post("/auth/login", async (req, res) => {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role,
+      className: user.className,
+      avatarUrl: user.avatarUrl,
+      role: normalizeRole(user.role),
       classCode: user.classCode,
       xp: user.xp,
       streak: newStreak,
@@ -118,8 +128,8 @@ router.patch("/auth/profile", async (req, res) => {
       return;
     }
 
-    const { name, currentPassword, newPassword } = req.body;
-    const updates: Partial<{ name: string; passwordHash: string }> = {};
+    const { name, currentPassword, newPassword, avatarUrl } = req.body;
+    const updates: Partial<{ name: string; passwordHash: string; avatarUrl: string | null }> = {};
 
     if (name && name.trim()) {
       updates.name = name.trim();
@@ -142,6 +152,35 @@ router.patch("/auth/profile", async (req, res) => {
       updates.passwordHash = await bcrypt.hash(newPassword, 10);
     }
 
+    if (avatarUrl !== undefined) {
+      if (avatarUrl === null) {
+        updates.avatarUrl = null;
+      } else if (typeof avatarUrl === "string") {
+        const normalizedAvatarUrl = avatarUrl.trim();
+        if (!normalizedAvatarUrl) {
+          updates.avatarUrl = null;
+        } else {
+          const isImageDataUrl = normalizedAvatarUrl.startsWith("data:image/");
+          const isHttpUrl = /^https?:\/\//i.test(normalizedAvatarUrl);
+
+          if (!isImageDataUrl && !isHttpUrl) {
+            res.status(400).json({ error: "Format foto profil tidak valid" });
+            return;
+          }
+
+          if (normalizedAvatarUrl.length > 2_000_000) {
+            res.status(400).json({ error: "Ukuran foto profil terlalu besar" });
+            return;
+          }
+
+          updates.avatarUrl = normalizedAvatarUrl;
+        }
+      } else {
+        res.status(400).json({ error: "Format foto profil tidak valid" });
+        return;
+      }
+    }
+
     if (Object.keys(updates).length === 0) {
       res.status(400).json({ error: "Tidak ada data yang diubah" });
       return;
@@ -153,7 +192,9 @@ router.patch("/auth/profile", async (req, res) => {
       id: updated.id,
       name: updated.name,
       email: updated.email,
-      role: updated.role,
+      className: updated.className,
+      avatarUrl: updated.avatarUrl,
+      role: normalizeRole(updated.role),
       classCode: updated.classCode,
       xp: updated.xp,
       streak: updated.streak,

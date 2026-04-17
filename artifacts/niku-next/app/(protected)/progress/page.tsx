@@ -1,14 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import {
   IoCreateOutline,
   IoDocumentText,
   IoFlash,
   IoFlame,
   IoLogOutOutline,
-  IoPeopleOutline,
   IoSchoolOutline,
   IoTrophy,
 } from "react-icons/io5";
@@ -25,7 +23,6 @@ export default function ProgressPage() {
     refreshProgress,
     refreshMaterials,
     getLevelInfo,
-    createClassroom,
   } = useAppContext();
 
   const [showEditModal, setShowEditModal] = useState(false);
@@ -33,10 +30,12 @@ export default function ProgressPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarChanged, setAvatarChanged] = useState(false);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const isDosen = user?.role === "dosen";
+  const isSensei = user?.role === "sensei";
   const levelInfo = getLevelInfo();
   const xp = progressData?.user.xp ?? user?.xp ?? 0;
   const streak = progressData?.user.streak ?? user?.streak ?? 0;
@@ -58,7 +57,7 @@ export default function ProgressPage() {
   );
   const totalSoal = myMaterials.reduce((sum, material) => sum + material.questionCount, 0);
 
-  const dosenCategoryCounts = useMemo(() => {
+  const senseiCategoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const material of myMaterials) {
       counts[material.category] = (counts[material.category] || 0) + 1;
@@ -66,15 +65,19 @@ export default function ProgressPage() {
     return counts;
   }, [myMaterials]);
 
-  const mahasiswaCategoryProgress = progressData?.categoryProgress ?? [];
+  const gakouseiCategoryProgress = progressData?.categoryProgress ?? [];
 
   useEffect(() => {
     setName(user?.name ?? "");
+    setAvatarPreview(user?.avatarUrl ?? null);
+    setAvatarChanged(false);
     void Promise.all([refreshProgress(), refreshMaterials()]);
-  }, [refreshMaterials, refreshProgress, user?.name]);
+  }, [refreshMaterials, refreshProgress, user?.avatarUrl, user?.name]);
 
   const openEditModal = () => {
     setName(user?.name ?? "");
+    setAvatarPreview(user?.avatarUrl ?? null);
+    setAvatarChanged(false);
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
@@ -82,11 +85,47 @@ export default function ProgressPage() {
     setStatus("");
   };
 
+  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setStatus("File foto profil harus berupa gambar.");
+      return;
+    }
+
+    if (file.size > 1_500_000) {
+      setStatus("Ukuran foto profil maksimal 1.5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setAvatarPreview(reader.result);
+        setAvatarChanged(true);
+      }
+    };
+    reader.onerror = () => {
+      setStatus("Gagal membaca file foto profil.");
+    };
+    reader.readAsDataURL(file);
+
+    event.target.value = "";
+  };
+
+  const clearAvatar = () => {
+    setAvatarPreview(null);
+    setAvatarChanged(true);
+    setStatus("");
+  };
+
   const saveProfile = async () => {
     const nameChanged = name.trim() && name.trim() !== user?.name;
     const passwordChanging = newPassword.trim().length > 0;
+    const hasAvatarChanged = avatarChanged;
 
-    if (!nameChanged && !passwordChanging) {
+    if (!nameChanged && !passwordChanging && !hasAvatarChanged) {
       setStatus("Tidak ada perubahan pada profil.");
       return;
     }
@@ -112,9 +151,11 @@ export default function ProgressPage() {
       await updateProfile({
         ...(nameChanged ? { name: name.trim() } : {}),
         ...(passwordChanging ? { currentPassword, newPassword } : {}),
+        ...(hasAvatarChanged ? { avatarUrl: avatarPreview } : {}),
       });
       setStatus("Profil berhasil diperbarui.");
       setShowEditModal(false);
+      setAvatarChanged(false);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -126,29 +167,21 @@ export default function ProgressPage() {
     }
   };
 
-  const handleCreateClass = async () => {
-    setBusy(true);
-    setStatus("");
-    try {
-      const code = await createClassroom();
-      setStatus(`Kode kelas aktif: ${code}`);
-      await Promise.all([refreshProgress(), refreshMaterials()]);
-    } catch (err) {
-      setStatus(err instanceof Error ? err.message : "Gagal membuat kelas");
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <section className="screen progress-screen">
       <header className="screen-header progress-header stack">
         <div className="row-between">
           <div className="profile-headline">
-            <div className="avatar-large">{initials}</div>
+            <div className="avatar-large">
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt={`Foto profil ${user?.name ?? "pengguna"}`} className="avatar-image" />
+              ) : (
+                initials
+              )}
+            </div>
             <div>
               <h2>{user?.name}</h2>
-              <p className="muted">{isDosen ? "Dosen" : `Mahasiswa · Lv.${levelInfo.level} ${levelInfo.title}`}</p>
+              <p className="muted">{isSensei ? "Sensei" : `Gakousei · Lv.${levelInfo.level} ${levelInfo.title}`}</p>
             </div>
           </div>
 
@@ -162,7 +195,7 @@ export default function ProgressPage() {
           </div>
         </div>
 
-        {!isDosen ? (
+        {!isSensei ? (
           <div className="stack-sm">
             <div className="row-between">
               <p className="hero-kicker">Progress ke Lv.{levelInfo.level + 1}</p>
@@ -176,42 +209,8 @@ export default function ProgressPage() {
       </header>
 
       <div className="screen-content stack-lg">
-      <article className="card stack progress-class-card">
-        <div className="row-between">
-          <h3>{isDosen ? "Kelas Aktif" : "Kelas Saya"}</h3>
-          <div className="actions-row">
-            {isDosen ? <IoSchoolOutline size={18} className="class-card-icon" /> : <IoPeopleOutline size={18} className="class-card-icon" />}
-            {user?.classCode ? <span className="pill info">{user.classCode}</span> : null}
-          </div>
-        </div>
-
-        {isDosen ? (
-          <p className="muted">
-            {user.classCode
-              ? "Bagikan kode kelas ini ke mahasiswa agar materi tidak tercampur."
-              : "Buat kode kelas sebelum upload materi agar konten tersegmentasi dengan benar."}
-          </p>
-        ) : (
-          <p className="muted">
-            {user?.classCode
-              ? "Materi yang tampil hanya dari kelas ini."
-              : "Masukkan kode kelas dari dosen untuk membuka materi yang sesuai."}
-          </p>
-        )}
-
-        {isDosen ? (
-          <button className="primary-btn" type="button" onClick={handleCreateClass} disabled={busy}>
-            {user.classCode ? "Regenerate / Lihat Ulang Kode" : "Buat Kode Kelas"}
-          </button>
-        ) : (
-          <Link className="primary-btn inline-btn" href="/kelas">
-            Gabung Kelas di Menu Kelas
-          </Link>
-        )}
-      </article>
-
       <section className="grid compact-grid">
-        {isDosen ? (
+        {isSensei ? (
           <>
             <article className="card stat-card">
               <span className="stat-icon red"><IoDocumentText size={16} /></span>
@@ -236,10 +235,11 @@ export default function ProgressPage() {
               <p className="hero-kicker">Total XP</p>
               <p className="big-number">{xp}</p>
             </article>
-            <article className="card stat-card">
-              <span className="stat-icon orange"><IoFlame size={16} /></span>
+            <article className="card stat-card streak-card">
+              <span className="stat-icon orange streak-icon"><IoFlame size={16} /></span>
               <p className="hero-kicker">Streak</p>
               <p className="big-number">{streak}</p>
+              <p className="streak-caption">{streak > 0 ? "Hari beruntun" : "Mulai hari ini"}</p>
             </article>
             <article className="card stat-card">
               <span className="stat-icon green"><IoTrophy size={16} /></span>
@@ -256,11 +256,11 @@ export default function ProgressPage() {
       </section>
 
       <section className="stack">
-        <h3>{isDosen ? "Materi per Kategori" : "Progress Kategori"}</h3>
+        <h3>{isSensei ? "Materi per Kategori" : "Progress Kategori"}</h3>
 
-        {isDosen ? (
-          Object.keys(dosenCategoryCounts).length > 0 ? (
-            Object.entries(dosenCategoryCounts).map(([category, count]) => {
+        {isSensei ? (
+          Object.keys(senseiCategoryCounts).length > 0 ? (
+            Object.entries(senseiCategoryCounts).map(([category, count]) => {
               const pct = myMaterials.length > 0 ? Math.round((count / myMaterials.length) * 100) : 0;
               const meta = getCategoryMeta(category);
 
@@ -284,8 +284,8 @@ export default function ProgressPage() {
               <p className="muted">Belum ada materi yang diunggah.</p>
             </article>
           )
-        ) : mahasiswaCategoryProgress.length > 0 ? (
-          mahasiswaCategoryProgress.map((item) => {
+        ) : gakouseiCategoryProgress.length > 0 ? (
+          gakouseiCategoryProgress.map((item) => {
             const pct = item.total > 0 ? Math.round((item.completed / item.total) * 100) : 0;
             const meta = getCategoryMeta(item.category);
 
@@ -315,17 +315,41 @@ export default function ProgressPage() {
 
       {showEditModal ? (
         <div className="modal-overlay" onClick={() => setShowEditModal(false)} role="presentation">
-          <article className="modal-card" onClick={(event) => event.stopPropagation()}>
-            <h3>Edit Profil</h3>
+          <article className="modal-card profile-editor-card" onClick={(event) => event.stopPropagation()}>
+            <header className="profile-editor-head">
+              <p className="eyebrow">Profil</p>
+              <h3>Edit Profil</h3>
+              <p className="muted">Atur nama, foto profil, dan password akunmu.</p>
+            </header>
 
-            <label>
+            <section className="profile-photo-editor">
+              <div className="profile-photo-preview" aria-hidden="true">
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Preview foto profil" className="avatar-image" />
+                ) : (
+                  initials
+                )}
+              </div>
+
+              <div className="profile-photo-actions">
+                <label className="ghost-btn inline-btn profile-photo-upload-btn">
+                  Pilih Foto
+                  <input type="file" accept="image/*" onChange={handleAvatarChange} hidden />
+                </label>
+                <button type="button" className="text-btn inline-btn" onClick={clearAvatar}>
+                  Hapus Foto
+                </button>
+              </div>
+            </section>
+
+            <label className="profile-input-group">
               Nama
               <input value={name} onChange={(event) => setName(event.target.value)} />
             </label>
 
             <p className="muted">Kosongkan password jika tidak ingin mengganti.</p>
 
-            <label>
+            <label className="profile-input-group">
               Password Lama
               <input
                 type="password"
@@ -334,7 +358,7 @@ export default function ProgressPage() {
               />
             </label>
 
-            <label>
+            <label className="profile-input-group">
               Password Baru
               <input
                 type="password"
@@ -343,7 +367,7 @@ export default function ProgressPage() {
               />
             </label>
 
-            <label>
+            <label className="profile-input-group">
               Konfirmasi Password Baru
               <input
                 type="password"

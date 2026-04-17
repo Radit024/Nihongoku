@@ -60,7 +60,9 @@ export interface ApiUser {
   id: string;
   name: string;
   email: string;
-  role: "dosen" | "mahasiswa";
+  className: string | null;
+  avatarUrl: string | null;
+  role: "sensei" | "gakousei";
   classCode: string | null;
   xp: number;
   streak: number;
@@ -144,7 +146,7 @@ export const api = {
     return request("/auth/login", { method: "POST", body: JSON.stringify(data) });
   },
 
-  updateProfile(userId: string, data: { name?: string; currentPassword?: string; newPassword?: string }): Promise<ApiUser> {
+  updateProfile(userId: string, data: { name?: string; currentPassword?: string; newPassword?: string; avatarUrl?: string | null }): Promise<ApiUser> {
     return request("/auth/profile", {
       method: "PATCH",
       headers: { "x-user-id": userId },
@@ -152,14 +154,15 @@ export const api = {
     });
   },
 
-  createClassroom(userId: string): Promise<{ classCode: string }> {
+  createClassroom(userId: string, className: string): Promise<{ classCode: string; className: string | null }> {
     return request("/classroom/create", {
       method: "POST",
       headers: { "x-user-id": userId },
+      body: JSON.stringify({ className }),
     });
   },
 
-  joinClassroom(userId: string, classCode: string): Promise<{ classCode: string }> {
+  joinClassroom(userId: string, classCode: string): Promise<{ classCode: string; className: string | null }> {
     return request("/classroom/join", {
       method: "POST",
       headers: { "x-user-id": userId },

@@ -34,7 +34,7 @@ export default function DashboardPage() {
     void Promise.all([refreshMaterials(), refreshProgress()]);
   }, [refreshMaterials, refreshProgress]);
 
-  const isDosen = user?.role === "dosen";
+  const isSensei = user?.role === "sensei";
   const levelInfo = getLevelInfo();
   const firstName = user?.name?.split(" ")[0] || "Gakusei";
   const fullName = user?.name || "Gakusei";
@@ -66,14 +66,14 @@ export default function DashboardPage() {
   return (
     <section className="screen dashboard-screen">
       <header className="screen-header dashboard-header">
-        {isDosen ? (
+        {isSensei ? (
           <>
             <div className="row-between">
               <div>
                 <p className="dashboard-sub">Konnichiwa, Sensei</p>
                 <h2 className="dashboard-title">{firstName}</h2>
               </div>
-              <span className="dashboard-role-badge">Dosen</span>
+              <span className="dashboard-role-badge">Sensei</span>
             </div>
 
             <section className="dashboard-stat-row">
@@ -95,10 +95,16 @@ export default function DashboardPage() {
           <>
             <div className="dashboard-user-row">
               <div className="dashboard-user-left">
-                <div className="dashboard-avatar">{userInitial}</div>
+                <div className="dashboard-avatar">
+                  {user?.avatarUrl ? (
+                    <img src={user.avatarUrl} alt={`Foto profil ${fullName}`} className="avatar-image" />
+                  ) : (
+                    userInitial
+                  )}
+                </div>
                 <div>
                   <h2 className="dashboard-user-name">{fullName}</h2>
-                  <p className="dashboard-sub">Mahasiswa · Lv.{levelInfo.level} {levelInfo.title}</p>
+                  <p className="dashboard-sub">Gakousei · Lv.{levelInfo.level} {levelInfo.title}</p>
                 </div>
               </div>
 
@@ -120,17 +126,17 @@ export default function DashboardPage() {
         )}
       </header>
 
-      {!isDosen ? (
+      {!isSensei ? (
         <section className="dashboard-strip">
           <article className="dashboard-mini-card">
             <span className="dashboard-mini-icon bg-red"><IoFlash size={13} /></span>
             <p className="dashboard-mini-value">{xp}</p>
             <p className="dashboard-mini-label">Total XP</p>
           </article>
-          <article className="dashboard-mini-card">
-            <span className="dashboard-mini-icon bg-orange"><IoFlame size={13} /></span>
+          <article className="dashboard-mini-card streak-mini-card">
+            <span className="dashboard-mini-icon bg-orange streak-mini-icon"><IoFlame size={13} /></span>
             <p className="dashboard-mini-value">{streak}</p>
-            <p className="dashboard-mini-label">Streak</p>
+            <p className="dashboard-mini-label streak-mini-label">Streak</p>
           </article>
           <article className="dashboard-mini-card">
             <span className="dashboard-mini-icon bg-green"><IoTrophy size={13} /></span>
@@ -147,7 +153,7 @@ export default function DashboardPage() {
 
       <div className="screen-content stack-lg">
         <section className="stack">
-          <h3 className="section-title">{isDosen ? "Kategori Materi" : "Progress Kategori"}</h3>
+          <h3 className="section-title">{isSensei ? "Kategori Materi" : "Progress Kategori"}</h3>
 
           {activeCategories.length > 0 ? (
             <section className="category-grid">
@@ -173,15 +179,15 @@ export default function DashboardPage() {
             <article className="card empty-card stack-sm">
               <span className="empty-icon"><IoBookOutline size={34} /></span>
               <p className="muted">
-                {isDosen
+                {isSensei
                   ? "Belum ada materi. Mulai unggah di tab Upload."
-                  : "Belum ada materi. Tunggu dosen mengunggah materi."}
+                  : "Belum ada materi. Tunggu sensei mengunggah materi."}
               </p>
             </article>
           )}
         </section>
 
-        {isDosen ? (
+        {isSensei ? (
           <Link href="/upload" className="cta-tile">
             <span className="cta-icon-box"><IoCloudUploadOutline size={24} /></span>
             <div className="cta-content">

@@ -92,7 +92,7 @@ export default function UploadPage() {
 
   useEffect(() => {
     const materialId = params.get("material");
-    if (!materialId || user?.role !== "dosen") {
+    if (!materialId || user?.role !== "sensei") {
       return;
     }
     if (editorMaterial?.id === materialId) {
@@ -101,11 +101,11 @@ export default function UploadPage() {
     void openEditor(materialId);
   }, [editorMaterial?.id, openEditor, params, user?.role]);
 
-  if (user?.role !== "dosen") {
+  if (user?.role !== "sensei") {
     return (
       <article className="card">
-        <h2>Halaman ini khusus dosen</h2>
-        <p className="muted">Mahasiswa tidak memiliki akses upload materi.</p>
+        <h2>Halaman ini khusus sensei</h2>
+        <p className="muted">Gakousei tidak memiliki akses upload materi.</p>
       </article>
     );
   }
@@ -208,7 +208,7 @@ export default function UploadPage() {
     try {
       const published = !(material.isPublished ?? false);
       await api.setMaterialPublishState(user.id, material.id, published);
-      setStatus(published ? "Materi dipublish untuk mahasiswa." : "Materi dikembalikan ke draft.");
+      setStatus(published ? "Materi dipublish untuk gakousei." : "Materi dikembalikan ke draft.");
       await refreshMaterials();
       if (editorMaterial?.id === material.id) {
         await openEditor(material.id);
@@ -227,7 +227,7 @@ export default function UploadPage() {
     try {
       const published = !(editorMaterial.isPublished ?? false);
       await api.setMaterialPublishState(user.id, editorMaterial.id, published);
-      setStatus(published ? "Materi dipublish untuk mahasiswa." : "Materi dikembalikan ke draft.");
+      setStatus(published ? "Materi dipublish untuk gakousei." : "Materi dikembalikan ke draft.");
       await refreshMaterials();
       await openEditor(editorMaterial.id);
     } catch (err) {
@@ -279,7 +279,7 @@ export default function UploadPage() {
     <section className="screen upload-screen">
       <header className="screen-header upload-header">
         <h2 className="screen-title">Upload Materi</h2>
-        <p className="screen-subtitle">Unggah PDF, PPT, Word, atau foto. Edit soal lalu publish ke mahasiswa.</p>
+        <p className="screen-subtitle">Unggah PDF, PPT, Word, atau foto. Edit soal lalu publish ke gakousei.</p>
       </header>
 
       <div className="screen-content stack-lg">

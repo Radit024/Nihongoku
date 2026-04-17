@@ -21,7 +21,7 @@ export default function LoginPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"mahasiswa" | "dosen">("mahasiswa");
+  const [role, setRole] = useState<"gakousei" | "sensei">("gakousei");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -83,19 +83,19 @@ export default function LoginPage() {
               <div className="role-picker-row">
                 <button
                   type="button"
-                  className={role === "mahasiswa" ? "role-pill active" : "role-pill"}
-                  onClick={() => setRole("mahasiswa")}
+                  className={role === "gakousei" ? "role-pill active" : "role-pill"}
+                  onClick={() => setRole("gakousei")}
                 >
                   <IoSchoolOutline size={16} />
-                  Mahasiswa
+                  Gakousei
                 </button>
                 <button
                   type="button"
-                  className={role === "dosen" ? "role-pill active" : "role-pill"}
-                  onClick={() => setRole("dosen")}
+                  className={role === "sensei" ? "role-pill active" : "role-pill"}
+                  onClick={() => setRole("sensei")}
                 >
                   <IoBriefcaseOutline size={16} />
-                  Dosen
+                  Sensei
                 </button>
               </div>
             ) : null}
@@ -148,6 +148,16 @@ export default function LoginPage() {
           </button>
         </article>
       </section>
+
+      {loading ? (
+        <div className="auth-loading-overlay" role="status" aria-live="polite" aria-busy="true">
+          <div className="auth-loading-card">
+            <div className="auth-loading-spinner" aria-hidden="true" />
+            <h3>{mode === "login" ? "Memproses login" : "Membuat akun"}</h3>
+            <p>Tunggu sebentar, kami sedang menyiapkan sesi kamu.</p>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

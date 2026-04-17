@@ -38,7 +38,7 @@ export default function QuizDetailPage() {
       return;
     }
 
-    if (user.role === "dosen") {
+    if (user.role === "sensei") {
       router.replace("/upload");
       return;
     }

@@ -14,6 +14,14 @@ const upload = multer({
 
 const router = Router();
 
+function isSenseiRole(role: string): boolean {
+  return role === "sensei" || role === "dosen";
+}
+
+function isGakouseiRole(role: string): boolean {
+  return role === "gakousei" || role === "mahasiswa";
+}
+
 const MATERIAL_CATEGORIES = [
   "Tata Bahasa",
   "Kosakata",
@@ -250,8 +258,8 @@ router.post("/materials/upload", upload.single("file"), async (req, res) => {
     }
 
     const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-    if (!user || user.role !== "dosen") {
-      res.status(403).json({ error: "Hanya dosen yang dapat mengunggah materi" });
+    if (!user || !isSenseiRole(user.role)) {
+      res.status(403).json({ error: "Hanya sensei yang dapat mengunggah materi" });
       return;
     }
     if (!user.classCode) {
@@ -365,7 +373,7 @@ router.get("/materials", async (req, res) => {
       return;
     }
 
-    const whereClause = user.role === "mahasiswa"
+    const whereClause = isGakouseiRole(user.role)
       ? and(
         eq(materialsTable.classCode, user.classCode),
         eq(materialsTable.isPublished, true),
@@ -424,7 +432,7 @@ router.get("/materials/:id", async (req, res) => {
       return;
     }
 
-    if (user.role === "mahasiswa" && !material.isPublished) {
+    if (isGakouseiRole(user.role) && !material.isPublished) {
       res.status(403).json({ error: "Materi ini belum dipublikasikan oleh sensei" });
       return;
     }
@@ -468,8 +476,8 @@ router.patch("/materials/:id/questions", async (req, res) => {
       return;
     }
 
-    if (user.role !== "dosen") {
-      res.status(403).json({ error: "Hanya dosen yang dapat mengatur soal kuis" });
+    if (!isSenseiRole(user.role)) {
+      res.status(403).json({ error: "Hanya sensei yang dapat mengatur soal kuis" });
       return;
     }
 
@@ -524,8 +532,8 @@ router.post("/materials/:id/regenerate-quiz", async (req, res) => {
       return;
     }
 
-    if (user.role !== "dosen") {
-      res.status(403).json({ error: "Hanya dosen yang dapat regenerasi kuis" });
+    if (!isSenseiRole(user.role)) {
+      res.status(403).json({ error: "Hanya sensei yang dapat regenerasi kuis" });
       return;
     }
 
@@ -612,8 +620,8 @@ router.post("/materials/:id/publish", async (req, res) => {
       return;
     }
 
-    if (user.role !== "dosen") {
-      res.status(403).json({ error: "Hanya dosen yang dapat mempublikasikan kuis" });
+    if (!isSenseiRole(user.role)) {
+      res.status(403).json({ error: "Hanya sensei yang dapat mempublikasikan kuis" });
       return;
     }
 

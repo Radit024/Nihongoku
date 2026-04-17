@@ -10,6 +10,14 @@ const PASS_THRESHOLD = 0.8;
 const XP_PER_CORRECT = 10;
 const BONUS_XP_PASS = 20;
 
+function isGakouseiRole(role: string): boolean {
+  return role === "gakousei" || role === "mahasiswa";
+}
+
+function normalizeRole(role: string): "sensei" | "gakousei" {
+  return role === "sensei" || role === "dosen" ? "sensei" : "gakousei";
+}
+
 router.post("/quizzes/:materialId/submit", async (req, res) => {
   try {
     const userId = req.headers["x-user-id"] as string;
@@ -43,7 +51,7 @@ router.post("/quizzes/:materialId/submit", async (req, res) => {
       return;
     }
 
-    if (user.role === "mahasiswa" && !material.isPublished) {
+    if (isGakouseiRole(user.role) && !material.isPublished) {
       res.status(403).json({ error: "Kuis ini belum dipublikasikan oleh sensei" });
       return;
     }
@@ -182,7 +190,8 @@ router.get("/progress", async (req, res) => {
           id: user.id,
           name: user.name,
           email: user.email,
-          role: user.role,
+          role: normalizeRole(user.role),
+          className: user.className,
           classCode: user.classCode,
           xp: user.xp,
           streak: user.streak,
@@ -199,7 +208,7 @@ router.get("/progress", async (req, res) => {
     const passedQuizzes = allAttempts.filter(a => a.passed).length;
     const uniqueMaterialsPassed = new Set(allAttempts.filter(a => a.passed).map(a => a.materialId)).size;
 
-    const categoryStatsWhere = user.role === "mahasiswa"
+    const categoryStatsWhere = isGakouseiRole(user.role)
       ? and(eq(materialsTable.classCode, user.classCode), eq(materialsTable.isPublished, true))
       : eq(materialsTable.classCode, user.classCode);
 
@@ -234,7 +243,8 @@ router.get("/progress", async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role,
+        role: normalizeRole(user.role),
+        className: user.className,
         classCode: user.classCode,
         xp: user.xp,
         streak: user.streak,

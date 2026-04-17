@@ -28,8 +28,8 @@ export interface AppContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, role: string) => Promise<void>;
   logout: () => void;
-  updateProfile: (data: { name?: string; currentPassword?: string; newPassword?: string }) => Promise<void>;
-  createClassroom: () => Promise<string>;
+  updateProfile: (data: { name?: string; currentPassword?: string; newPassword?: string; avatarUrl?: string | null }) => Promise<void>;
+  createClassroom: (className: string) => Promise<string>;
   joinClassroom: (classCode: string) => Promise<string>;
   refreshMaterials: () => Promise<void>;
   refreshProgress: () => Promise<void>;
@@ -157,17 +157,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
-  const updateProfile = useCallback(async (data: { name?: string; currentPassword?: string; newPassword?: string }) => {
+  const updateProfile = useCallback(async (data: { name?: string; currentPassword?: string; newPassword?: string; avatarUrl?: string | null }) => {
     if (!user) throw new Error("Not logged in");
     const updatedUser = await api.updateProfile(user.id, data);
     setUser(updatedUser);
     saveUser(updatedUser);
   }, [saveUser, user]);
 
-  const createClassroom = useCallback(async () => {
+  const createClassroom = useCallback(async (className: string) => {
     if (!user) throw new Error("Not logged in");
-    const result = await api.createClassroom(user.id);
-    const updatedUser = { ...user, classCode: result.classCode };
+    const result = await api.createClassroom(user.id, className);
+    const nextClassName = result.className ?? className.trim() ?? user.className ?? null;
+    const updatedUser = { ...user, className: nextClassName, classCode: result.classCode };
     setUser(updatedUser);
     saveUser(updatedUser);
     return result.classCode;
@@ -176,7 +177,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const joinClassroom = useCallback(async (classCode: string) => {
     if (!user) throw new Error("Not logged in");
     const result = await api.joinClassroom(user.id, classCode);
-    const updatedUser = { ...user, classCode: result.classCode };
+    const updatedUser = { ...user, className: result.className ?? user.className ?? null, classCode: result.classCode };
     setUser(updatedUser);
     saveUser(updatedUser);
     return result.classCode;

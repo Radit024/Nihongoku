@@ -9,8 +9,8 @@ import { ALL_CATEGORIES, getCategoryMeta } from "@/lib/categories";
 
 type KelasTab = "materi" | "kuis";
 
-function getActiveTab(rawTab: string | null, isDosen: boolean): KelasTab {
-  if (isDosen) return "materi";
+function getActiveTab(rawTab: string | null, isSensei: boolean): KelasTab {
+  if (isSensei) return "materi";
   return rawTab === "kuis" ? "kuis" : "materi";
 }
 
@@ -20,6 +20,7 @@ export default function KelasPage() {
     user,
     materials,
     quizHistory,
+    createClassroom,
     joinClassroom,
     refreshMaterials,
     refreshProgress,
@@ -29,22 +30,30 @@ export default function KelasPage() {
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [activeTab, setActiveTab] = useState<KelasTab>("materi");
+  const [classNameInput, setClassNameInput] = useState("");
   const [classCodeInput, setClassCodeInput] = useState("");
+  const [senseiStatus, setSenseiStatus] = useState("");
+  const [senseiError, setSenseiError] = useState(false);
+  const [senseiBusy, setSenseiBusy] = useState(false);
   const [joinStatus, setJoinStatus] = useState("");
   const [joinError, setJoinError] = useState(false);
   const [joinBusy, setJoinBusy] = useState(false);
 
-  const isDosen = user?.role === "dosen";
+  const isSensei = user?.role === "sensei";
 
   useEffect(() => {
     const incomingFilter = params.get("filter");
     setSelectedCategory(incomingFilter ?? "Semua");
-    setActiveTab(getActiveTab(params.get("tab"), isDosen));
-  }, [isDosen, params]);
+    setActiveTab(getActiveTab(params.get("tab"), isSensei));
+  }, [isSensei, params]);
 
   useEffect(() => {
-    void Promise.all([refreshMaterials(), refreshProgress(), ...(isDosen ? [] : [refreshQuizHistory()])]);
-  }, [isDosen, refreshMaterials, refreshProgress, refreshQuizHistory]);
+    setClassNameInput(user?.className ?? "");
+  }, [user?.className]);
+
+  useEffect(() => {
+    void Promise.all([refreshMaterials(), refreshProgress(), ...(isSensei ? [] : [refreshQuizHistory()])]);
+  }, [isSensei, refreshMaterials, refreshProgress, refreshQuizHistory]);
 
   const handleJoinClass = async () => {
     if (!classCodeInput.trim()) {
@@ -67,6 +76,49 @@ export default function KelasPage() {
       setJoinError(true);
     } finally {
       setJoinBusy(false);
+    }
+  };
+
+  const handleGenerateClassCode = async () => {
+    const normalizedClassName = classNameInput.trim();
+    if (!normalizedClassName) {
+      setSenseiStatus("Isi nama kelas terlebih dahulu.");
+      setSenseiError(true);
+      return;
+    }
+
+    setSenseiBusy(true);
+    setSenseiStatus("");
+    setSenseiError(false);
+
+    try {
+      const code = await createClassroom(normalizedClassName);
+      setClassNameInput(normalizedClassName);
+      setSenseiStatus(`Kode kelas ${code} siap digunakan untuk kelas ${normalizedClassName}.`);
+      await Promise.all([refreshMaterials(), refreshProgress()]);
+    } catch (err) {
+      setSenseiStatus(err instanceof Error ? err.message : "Gagal membuat kode kelas");
+      setSenseiError(true);
+    } finally {
+      setSenseiBusy(false);
+    }
+  };
+
+  const handleCopyClassCode = async () => {
+    const code = user?.classCode?.trim();
+    if (!code) {
+      setSenseiStatus("Buat kode kelas terlebih dahulu.");
+      setSenseiError(true);
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(code);
+      setSenseiStatus("Kode kelas berhasil disalin.");
+      setSenseiError(false);
+    } catch {
+      setSenseiStatus("Gagal menyalin kode kelas. Silakan salin manual.");
+      setSenseiError(true);
     }
   };
 
@@ -102,15 +154,15 @@ export default function KelasPage() {
     });
   }, [materials, query, selectedCategory]);
 
-  const showMateriTab = isDosen || activeTab === "materi";
-  const showKuisTab = !isDosen && activeTab === "kuis";
+  const showMateriTab = isSensei || activeTab === "materi";
+  const showKuisTab = !isSensei && activeTab === "kuis";
 
   return (
     <section className="screen kelas-screen">
       <header className="screen-header materi-header">
         <h2 className="screen-title">Kelas</h2>
         <p className="screen-subtitle">
-          {materials.length} materi {isDosen ? "tersedia" : "dan kuis siap dipelajari"}
+          {materials.length} materi {isSensei ? "tersedia" : "dan kuis siap dipelajari"}
         </p>
 
         <div className="header-search-box">
@@ -130,7 +182,7 @@ export default function KelasPage() {
       </header>
 
       <div className="kelas-chip-wrap">
-        {!isDosen ? (
+        {!isSensei ? (
           <div className="chip-list">
             <button
               type="button"
@@ -164,7 +216,53 @@ export default function KelasPage() {
       </div>
 
       <div className="screen-content stack">
-        {!isDosen ? (
+        {isSensei ? (
+          <article className="card stack-sm">
+            <div className="row-between">
+              <h3>Kode Kelas Sensei</h3>
+              {user?.classCode ? <span className="pill info">{user.classCode}</span> : null}
+            </div>
+
+            <p className="muted">
+              {user?.classCode
+                ? "Bagikan kode ini ke gakousei agar mereka bisa bergabung ke kelasmu."
+                : "Buat kode kelas untuk mulai mengundang gakousei."}
+            </p>
+
+            <div className="class-join-row">
+              <input
+                placeholder="Nama kelas (contoh: N5 Pagi)"
+                value={classNameInput}
+                onChange={(event) => setClassNameInput(event.target.value)}
+              />
+            </div>
+
+            <div className="class-join-row">
+              <button
+                className="primary-btn inline-btn"
+                type="button"
+                onClick={handleGenerateClassCode}
+                disabled={senseiBusy}
+              >
+                {senseiBusy ? "Memproses..." : user?.classCode ? "Simpan & Gunakan Kode Kelas" : "Generate Kode Kelas"}
+              </button>
+              <button
+                className="ghost-btn inline-btn"
+                type="button"
+                onClick={handleCopyClassCode}
+                disabled={!user?.classCode}
+              >
+                Salin Kode
+              </button>
+            </div>
+
+            {senseiStatus ? (
+              senseiError ? <p className="error-text error-box">{senseiStatus}</p> : <div className="status-box success"><p>{senseiStatus}</p></div>
+            ) : null}
+
+            {user?.className ? <p className="muted">Nama kelas aktif: {user.className}</p> : null}
+          </article>
+        ) : (
           <article className="card stack-sm">
             <div className="row-between">
               <h3>Kelas Saya</h3>
@@ -174,7 +272,7 @@ export default function KelasPage() {
             <p className="muted">
               {user?.classCode
                 ? "Masukkan kode baru jika ingin pindah kelas."
-                : "Masukkan kode kelas dari dosen untuk membuka materi yang sesuai."}
+                : "Masukkan kode kelas dari sensei untuk membuka materi yang sesuai."}
             </p>
 
             <div className="class-join-row">
@@ -193,7 +291,7 @@ export default function KelasPage() {
               joinError ? <p className="error-text error-box">{joinStatus}</p> : <div className="status-box success"><p>{joinStatus}</p></div>
             ) : null}
           </article>
-        ) : null}
+        )}
 
         {showMateriTab
           ? filteredMaterials.map((item) => (
@@ -211,13 +309,13 @@ export default function KelasPage() {
                 <div className="material-content">
                   <div className="row-between">
                     <h3>{item.title}</h3>
-                    {!isDosen && passedMaterials.has(item.id) ? (
+                    {!isSensei && passedMaterials.has(item.id) ? (
                       <span className="pill success with-icon">
                         <IoCheckmarkCircle size={12} />
                         Lulus
                       </span>
                     ) : null}
-                    {isDosen && item.createdById === user?.id ? (
+                    {isSensei && item.createdById === user?.id ? (
                       <span className="pill info with-icon">
                         <IoPerson size={12} />
                         Milik Saya
@@ -240,7 +338,7 @@ export default function KelasPage() {
                     <p className="muted">{item.questionCount} soal</p>
                   </div>
 
-                  {isDosen ? (
+                  {isSensei ? (
                     <Link className="primary-btn inline-btn" href={{ pathname: "/upload", query: { material: item.id } }}>
                       Atur Kuis
                     </Link>
@@ -312,7 +410,7 @@ export default function KelasPage() {
             </h4>
             <p className="muted">
               {materials.length === 0
-                ? "Tunggu dosen mengunggah materi kelas."
+                ? "Tunggu sensei mengunggah materi kelas."
                 : "Coba ubah kata kunci atau kategori pencarian."}
             </p>
           </article>

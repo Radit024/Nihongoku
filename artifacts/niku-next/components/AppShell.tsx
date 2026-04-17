@@ -15,14 +15,14 @@ import {
 } from "react-icons/io5";
 import { useAppContext } from "@/context/AppContext";
 
-const DOSEN_NAV = [
+const SENSEI_NAV = [
   { href: "/dashboard", label: "Beranda", activeIcon: IoHome, icon: IoHomeOutline },
   { href: "/kelas", label: "Kelas", activeIcon: IoBook, icon: IoBookOutline },
   { href: "/upload", label: "Upload", activeIcon: IoCloudUpload, icon: IoCloudUploadOutline },
   { href: "/progress", label: "Profil", activeIcon: IoPersonCircle, icon: IoPersonCircleOutline },
 ];
 
-const MAHASISWA_NAV = [
+const GAKOUSEI_NAV = [
   { href: "/dashboard", label: "Beranda", activeIcon: IoHome, icon: IoHomeOutline },
   { href: "/kelas", label: "Kelas", activeIcon: IoBook, icon: IoBookOutline },
   { href: "/progress", label: "Profil", activeIcon: IoPersonCircle, icon: IoPersonCircleOutline },
@@ -31,8 +31,8 @@ const MAHASISWA_NAV = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAppContext();
-  const isDosen = user?.role === "dosen";
-  const links = isDosen ? DOSEN_NAV : MAHASISWA_NAV;
+  const isSensei = user?.role === "sensei";
+  const links = isSensei ? SENSEI_NAV : GAKOUSEI_NAV;
   const firstName = user?.name?.split(" ")[0] ?? "Gakusei";
 
   return (
@@ -41,7 +41,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="side-nav-header">
           <p className="side-nav-kicker">Nihongoku</p>
           <h2>Halo, {firstName}</h2>
-          <p className="muted">{isDosen ? "Portal Dosen" : "Portal Mahasiswa"}</p>
+          <p className="muted">{isSensei ? "Portal Sensei" : "Portal Gakousei"}</p>
         </div>
 
         <nav
