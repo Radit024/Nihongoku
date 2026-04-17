@@ -189,6 +189,9 @@ export default function LoginScreen() {
       fontSize: 15,
       fontFamily: fonts.semiBold,
       color: colors.foreground,
+      borderWidth: 0,
+      outlineWidth: 0,
+      outlineColor: "transparent",
     },
     roleRow: {
       flexDirection: "row",
