@@ -9,8 +9,11 @@
   ],
   "scripts": {
     "preinstall": "node -e \"const ua=process.env.npm_config_user_agent||''; if(!ua.startsWith('npm/')){ console.error('Use npm instead'); process.exit(1); }\"",
-    "dev:next": "concurrently -n web,api -c magenta,green \"npm run dev:next -w niku-next\" \"npm run dev -w @workspace/api-server\"",
+    "dev": "npm run dev:monolith -w @workspace/api-server",
+    "dev:next": "npm run dev",
+    "dev:split": "concurrently -n web,api -c magenta,green \"npm run dev:next -w niku-next\" \"npm run dev -w @workspace/api-server\"",
     "build": "npm run typecheck && npm run build --workspaces --if-present",
+    "build:app": "npm run build:single-hosting",
     "build:single-hosting": "npm run build -w niku-next && npm run build -w @workspace/api-server",
     "start:single-hosting": "npm run start -w @workspace/api-server",
     "deploy:single-hosting": "npm run build:single-hosting && npm run start:single-hosting",
@@ -20,6 +23,7 @@
   "private": true,
   "devDependencies": {
     "concurrently": "^9.2.1",
+    "nex": "file:./scripts/nex-cli",
     "prettier": "^3.8.1",
     "typescript": "~5.9.2"
   }

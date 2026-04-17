@@ -10,6 +10,7 @@ const app: Express = express();
 const webOutDir = path.resolve(__dirname, "..", "..", "niku-next", "out");
 const webIndexFile = path.join(webOutDir, "index.html");
 const hasWebStaticBuild = fs.existsSync(webIndexFile);
+const isMonolithDev = process.env.MONOLITH_DEV === "1";
 
 app.use(
   pinoHttp({
@@ -43,7 +44,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 
-if (hasWebStaticBuild) {
+if (hasWebStaticBuild && !isMonolithDev) {
   logger.info({ webOutDir }, "Serving static web build from api-server");
 
   app.use(

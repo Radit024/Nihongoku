@@ -18,7 +18,32 @@ Migrasi aplikasi Nihongoku dari React Native ke Next.js (App Router) dengan targ
 npm run dev -w niku-next
 ```
 
-Command di atas sekarang menjalankan frontend Next (8082) dan backend API (8080) secara bersamaan.
+Alternatif singkat dari root workspace:
+
+```bash
+npx nex dev
+```
+
+Perintah ini menjalankan mode development monolith: frontend Next dan backend API dalam satu process/server.
+
+Untuk build frontend + backend sekaligus:
+
+```bash
+npx nex build
+```
+
+Secara default mode dev monolith menggunakan satu origin:
+
+- Frontend: `http://localhost:8080`
+- Backend API: `http://localhost:8080/api`
+
+Jika butuh mode lama (split process), jalankan:
+
+```bash
+npm run dev:split
+```
+
+Mode split memakai:
 
 - Frontend: `http://localhost:8082`
 - Backend API: `http://localhost:8080/api`

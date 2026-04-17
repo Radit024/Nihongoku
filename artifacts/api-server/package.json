@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "npm run build && node --env-file-if-exists=.env --enable-source-maps ./dist/index.mjs",
+    "dev:monolith": "npm run build && node --env-file-if-exists=.env --enable-source-maps -e \"process.env.NODE_ENV='development'; process.env.MONOLITH_DEV='1'; import('./dist/index.mjs');\"",
     "build": "node ./build.mjs",
     "start": "node --env-file-if-exists=.env --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"

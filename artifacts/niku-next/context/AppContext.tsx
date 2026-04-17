@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   api,
   ApiMaterial,
@@ -53,6 +53,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [materials, setMaterials] = useState<ApiMaterial[]>([]);
   const [quizHistory, setQuizHistory] = useState<QuizHistoryItem[]>([]);
   const [progressData, setProgressData] = useState<ProgressData | null>(null);
+  const authVersionRef = useRef(0);
+  const currentUserIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    currentUserIdRef.current = user?.id ?? null;
+  }, [user?.id]);
+
+  const bumpAuthVersion = useCallback(() => {
+    authVersionRef.current += 1;
+  }, []);
 
   useEffect(() => {
     try {
@@ -76,17 +86,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const nextUser = await api.login({ email, password });
+    bumpAuthVersion();
     setUser(nextUser);
     saveUser(nextUser);
-  }, [saveUser]);
+  }, [bumpAuthVersion, saveUser]);
 
   const register = useCallback(async (name: string, email: string, password: string, role: string) => {
     const nextUser = await api.register({ name, email, password, role });
+    bumpAuthVersion();
     setUser(nextUser);
     saveUser(nextUser);
-  }, [saveUser]);
+  }, [bumpAuthVersion, saveUser]);
 
   const logout = useCallback(() => {
+    bumpAuthVersion();
     setUser(null);
     setMaterials([]);
     setQuizHistory([]);
@@ -96,12 +109,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Ignore persistence failures on constrained environments.
     }
-  }, []);
+
+    window.location.replace("/login");
+  }, [bumpAuthVersion]);
 
   const refreshMaterials = useCallback(async () => {
     if (!user) return;
+    const requestVersion = authVersionRef.current;
+    const requestUserId = user.id;
     try {
-      const nextMaterials = await api.getMaterials(user.id);
+      const nextMaterials = await api.getMaterials(requestUserId);
+      const hasSessionChanged = authVersionRef.current !== requestVersion || currentUserIdRef.current !== requestUserId;
+      if (hasSessionChanged) return;
       setMaterials(nextMaterials);
     } catch {
       // Screen-level components can still trigger manual retries.
@@ -110,8 +129,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const refreshProgress = useCallback(async () => {
     if (!user) return;
+    const requestVersion = authVersionRef.current;
+    const requestUserId = user.id;
     try {
-      const nextProgress = await api.getProgress(user.id);
+      const nextProgress = await api.getProgress(requestUserId);
+      const hasSessionChanged = authVersionRef.current !== requestVersion || currentUserIdRef.current !== requestUserId;
+      if (hasSessionChanged) return;
       setProgressData(nextProgress);
       setUser(nextProgress.user);
       saveUser(nextProgress.user);
@@ -122,8 +145,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const refreshQuizHistory = useCallback(async () => {
     if (!user) return;
+    const requestVersion = authVersionRef.current;
+    const requestUserId = user.id;
     try {
-      const history = await api.getQuizHistory(user.id);
+      const history = await api.getQuizHistory(requestUserId);
+      const hasSessionChanged = authVersionRef.current !== requestVersion || currentUserIdRef.current !== requestUserId;
+      if (hasSessionChanged) return;
       setQuizHistory(history);
     } catch {
       // Screen-level components can still trigger manual retries.

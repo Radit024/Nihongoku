@@ -33,27 +33,55 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user } = useAppContext();
   const isDosen = user?.role === "dosen";
   const links = isDosen ? DOSEN_NAV : MAHASISWA_NAV;
+  const firstName = user?.name?.split(" ")[0] ?? "Gakusei";
 
   return (
     <div className="app-shell">
-      <main className="page-body">{children}</main>
+      <aside className="side-nav">
+        <div className="side-nav-header">
+          <p className="side-nav-kicker">Nihongoku</p>
+          <h2>Halo, {firstName}</h2>
+          <p className="muted">{isDosen ? "Portal Dosen" : "Portal Mahasiswa"}</p>
+        </div>
 
-      <nav
-        className="bottom-nav"
-        style={{ "--nav-count": links.length } as React.CSSProperties}
-      >
-        {links.map((link) => {
-          const active = pathname === link.href;
-          const Icon = active ? link.activeIcon : link.icon;
+        <nav
+          className="side-nav-links"
+          style={{ "--nav-count": links.length } as React.CSSProperties}
+        >
+          {links.map((link) => {
+            const active = pathname === link.href;
+            const Icon = active ? link.activeIcon : link.icon;
 
-          return (
-            <Link key={link.href} href={link.href} className={active ? "nav-link active" : "nav-link"}>
-              <Icon size={22} className="nav-icon" />
-              <span className="nav-label">{link.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+            return (
+              <Link key={link.href} href={link.href} className={active ? "side-nav-link active" : "side-nav-link"}>
+                <Icon size={20} className="nav-icon" />
+                <span className="nav-label">{link.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+
+      <div className="shell-main">
+        <main className="page-body">{children}</main>
+
+        <nav
+          className="bottom-nav"
+          style={{ "--nav-count": links.length } as React.CSSProperties}
+        >
+          {links.map((link) => {
+            const active = pathname === link.href;
+            const Icon = active ? link.activeIcon : link.icon;
+
+            return (
+              <Link key={link.href} href={link.href} className={active ? "nav-link active" : "nav-link"}>
+                <Icon size={22} className="nav-icon" />
+                <span className="nav-label">{link.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
     </div>
   );
 }
