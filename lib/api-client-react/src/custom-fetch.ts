@@ -22,7 +22,7 @@ let _authTokenGetter: AuthTokenGetter | null = null;
  * Set a base URL that is prepended to every relative request URL
  * (i.e. paths that start with `/`).
  *
- * Useful for Expo bundles that need to call a remote API server.
+ * Useful for client bundles that need to call a remote API server.
  * Pass `null` to clear the base URL.
  */
 export function setBaseUrl(url: string | null): void {
@@ -34,7 +34,7 @@ export function setBaseUrl(url: string | null): void {
  * the getter is invoked; when it returns a non-null string, an
  * `Authorization: Bearer <token>` header is attached to the request.
  *
- * Useful for Expo bundles making token-gated API calls.
+ * Useful for client bundles making token-gated API calls.
  * Pass `null` to clear the getter.
  *
  * NOTE: This function should never be used in web applications where session
@@ -54,7 +54,7 @@ function resolveMethod(input: RequestInfo | URL, explicitMethod?: string): strin
   return "GET";
 }
 
-// Use loose check for URL — some runtimes (e.g. React Native) polyfill URL
+// Use loose check for URL — some runtimes polyfill URL
 // differently, so `instanceof URL` can fail.
 function isUrl(input: RequestInfo | URL): input is URL {
   return typeof URL !== "undefined" && input instanceof URL;
@@ -111,12 +111,10 @@ function isTextMediaType(mediaType: string | null): boolean {
   );
 }
 
-// Use strict equality: in browsers, `response.body` is `null` when the
-// response genuinely has no content.  In React Native, `response.body` is
-// always `undefined` because the ReadableStream API is not implemented —
-// even when the response carries a full payload readable via `.text()` or
-// `.json()`.  Loose equality (`== null`) matches both `null` and `undefined`,
-// which causes every React Native response to be treated as empty.
+// Use strict equality: in browser runtimes, `response.body` is `null` when the
+// response genuinely has no content. Some non-standard runtimes can report
+// `undefined` despite having a readable payload via `.text()` or `.json()`.
+// Loose equality (`== null`) would treat both values as empty responses.
 function hasNoBody(response: Response, method: string): boolean {
   if (method === "HEAD") return true;
   if (NO_BODY_STATUS.has(response.status)) return true;

@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 8082",
+    "dev": "npm run --prefix ../.. dev:next",
+    "dev:next": "next dev --port 8082",
     "build": "next build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "next start",
